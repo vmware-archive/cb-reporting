@@ -36,6 +36,7 @@ import os
 import time
 import socket
 import struct
+import shutil
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from yattag import Doc, indent
@@ -55,21 +56,16 @@ protocols = get_constants("IPPROTO_")
 class IncidentReport(object):
     def __init__(self, url, token):
         self.sensor = None
-        self.cb = rcbapi.RedisCbApiWrapper(url, token)
-        self.outdir = "reports"
-        try:
-            os.makedirs(self.outdir)
-        except:
-            pass
-
         self.htmlfile = None
 
+        self.cb = rcbapi.RedisCbApiWrapper(url, token)
+
+
     def _write_iconfile(self, md5):
+        if not md5:
+            return
         binary_details = self.cb.binary_summary(md5)
         if not binary_details:
-            #
-            # Write a generic icon
-            #
             return
 
         self.iconfile = file(self.outdir + ("/%s.png" % md5), 'wb')
@@ -258,7 +254,6 @@ class IncidentReport(object):
 
     def _parse_netconn(self, netconn):
         parts = netconn.split('|')
-        print parts
         new_conn = {}
         timestamp = datetime.strptime(parts[0], cb_datetime_format)
         new_conn['timestamp'] = timestamp
@@ -318,6 +313,21 @@ class IncidentReport(object):
         return netconnslist
 
     def generate_report(self, starting_guid):
+        self.outdir = starting_guid
+
+        try:
+            os.makedirs(self.outdir)
+        except:
+            pass
+
+        try:
+            shutil.copyfile("default.png", self.outdir + "/default.png")
+            shutil.copytree("css", self.outdir + "/css")
+            shutil.copytree("fonts", self.outdir + "/fonts")
+            shutil.copytree("js", self.outdir + "/js")
+        except:
+            print "Error Copying support files to output directory"
+            print "Files might already exist"
 
         self.process = self.cb.process_summary(starting_guid, 1).get('process', {})
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
@@ -328,18 +338,35 @@ class IncidentReport(object):
 
         self.process['id'] = starting_guid
 
+        #
         # get execution tree
+        #
         self.executors = [self.process]
         self.walk_executors_up(self.process.get('parent_unique_id'),
                                self.executors)
+        for executor in self.executors:
+            self._write_iconfile(executor.get('process_md5'))
 
+        #
+        # Get all child procs
+        #
         self.childProcs = self.getChildProcs(self.process.get('parent_unique_id'))
+        for childproc in self.childProcs:
+            self._write_iconfile(childproc.get('process_md5'))
 
-        # get writer tree
+        #
+        # get writers
+        #
         self.writers = []
+        self.walk_writers_by_path(hostname, process_path, self.writers)
+        for writer in self.writers:
+            self._write_iconfile(writer.get('process_md5'))
+
+        #
+        # Write our own icon
+        #
         if process_md5 in self.process:
             self._write_iconfile(self.process['process_md5'])
-        self.walk_writers_by_path(hostname, process_path, self.writers)
 
         self.netconns = self.getNetConns(self.process.get('parent_unique_id'))
 
