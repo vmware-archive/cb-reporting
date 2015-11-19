@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Incident Report for {{ process.process_name }} on {{process.hostname}}</title>
+    <script src="../js/jquery-1.11.3.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome.css">
+  </head>
+
+  <script>
+  $(function() {
+      $("#expandall").on('click', function(e) {
+        console.log("here");
+        $('.collapse').collapse('show');
+      });
+
+      $("#collapseall").on('click', function(e) {
+        console.log("here");
+        $('.collapse.in').collapse('hide');
+      });
+  });
+  console.log("here")
+  </script>
+  <body>
+    <div class="container">
+      <div class="container-fluid">
+        <div class="row">
+          <h2>Incident Summary: <img src="8148e859a8c771acfc8c13881a657c75.png" />
+          {{process.process_name}} on {{process.hostname}}</h2>
+          <h3>{{process_md5}}</h3>
+        </div>
+        <div class="row">Executed at {{process.start}} by {{process.username}}</div>
+        <div class="row">Process seen {{process_count.total_results}} times and seen on {{host_count.hostCount}} hosts</div>
+        <hr />
+        <button class="btn" id="expandall">Expand All</button>
+        <button class="btn" id="collapseall">Collapse All</button>
+        <h2>Writer Tree</h2>
+        {% for writer in writers %}
+        <div id="writer{{loop.index}}">
+            <h3 data-toggle="collapse" data-target="#writerconent{{loop.index}}">
+                {{writer.process_name}}<img width="32" src="a8f47072d3a759a398fa93df9e16a327.png" />
+                </h3>
+            <div class="collapse in" id="writercontent{{loop.index}}">
+            <table class="table table-condensed">
+                <caption>Process seen {{report._get_process_frequency(writer.get('process_md5'))[0].total_results}} times and seen on {{report._get_process_frequency(writer.get('process_md5'))[1].hostCount}} hosts
+                </caption>
+                <tbody>
+                <tr>
+                    <td class ="col-xs-2">Process Path</td>
+                    <td>{{writer.path}}</td>
+                </tr>
+                <tr>
+                    <td>Command Line</td>
+                    <td>{{writer.cmdline}}</td>
+                </tr>
+                <tr>
+                    <td>Process GUID</td>
+                    <td>{{writer.id}}</td>
+                </tr>
+                <tr>
+                    <td>Binary Information</td>
+                    <td>{{report._get_binary_info(writer.get('process_md5'))}}</td>
+                </tr>
+                </tbody>
+                </div>
+            </table>
+        </div>
+        {% if loop.index != writers|length %}
+        <i class="fa fa-arrow-down fa-2x"></i>
+        {% endif %}
+        {% endfor %}
+        <hr />
+          <h2>Execution Tree</h2>
+          {% for executor in executors %}
+          <div id="executor{{loop.index}}">
+          <h3 data-toggle="collapse" data-target="#executorcontent{{loop.index}}">
+            {{executor.process_name}}<img width="32" src="3199fe0d4cf925d638997d29bee99f83.png" />
+            </h3>
+
+            <div class="collapse in" id="executorcontent{{loop.index}}">
+            <table class="table table-condensed">
+            <caption>Process Seen {{report._get_process_frequency(executor.get('process_md5'))[0].total_results}}
+            times and seen on {{report._get_process_frequency(executor.get('process_md5'))[1].hostCount}} hosts
+            </caption>
+            <tbody>
+                <tr>
+                    <td class ="col-xs-2">Process Path</td>
+                    <td>{{executor.path}}</td>
+                </tr>
+                <tr>
+                    <td>Command Line</td>
+                    <td>{{executor.cmdline}}</td>
+                </tr>
+                <tr>
+                    <td>Process GUID</td>
+                    <td>{{executor.id}}</td>
+                </tr>
+                <tr>
+                    <td>Binary Information</td>
+                    <td>{{report._get_binary_info(executor.get('process_md5'))}}</td>
+                </tr>
+                </tbody>
+                </div>
+            </table>
+             </div>
+        {% if loop.index != executors|length %}
+        <i class="fa fa-arrow-down fa-2x"></i>
+        {% endif %}
+        {% endfor %}
+        <hr />
+        <div class="row">
+          <h3>Root Cause</h3>
+        </div>
+      </div>
+      <br />
+      <br />
+      <br />
+    </div>
+  </body>
+</html>
