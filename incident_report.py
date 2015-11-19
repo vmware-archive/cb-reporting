@@ -34,8 +34,23 @@ import pprint
 import base64
 import os
 import time
+import socket
+import struct
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from yattag import Doc, indent
+
+cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
+
+def get_constants(prefix):
+    """Create a dictionary mapping socket module constants to their names."""
+    return dict((getattr(socket, n), n)
+                for n in dir(socket)
+                if n.startswith(prefix)
+    )
+
+
+protocols = get_constants("IPPROTO_")
 
 class IncidentReport(object):
     def __init__(self, url, token):
@@ -91,6 +106,8 @@ class IncidentReport(object):
                          "starting_guid": starting_guid,
                          "writers": self.writers,
                          "executors": self.executors,
+                         "childprocs": self.childProcs,
+                         "netconns": self.netconns,
                          "report": self}
 
         j2_env = Environment( loader=FileSystemLoader(THIS_DIR),
@@ -239,6 +256,66 @@ class IncidentReport(object):
 
         self.htmlfile.write(indent(doc.getvalue()))
 
+    def _parse_netconn(self, netconn):
+        parts = netconn.split('|')
+        print parts
+        new_conn = {}
+        timestamp = datetime.strptime(parts[0], cb_datetime_format)
+        new_conn['timestamp'] = timestamp
+        try:
+            new_conn['ipaddr'] = socket.inet_ntop(socket.AF_INET, struct.pack('>i', int(parts[1])))
+        except:
+            new_conn['ipaddr'] = "0.0.0.0"
+        new_conn['port'] = int(parts[2])
+        new_conn['protocol'] = protocols[int(parts[3])]
+        new_conn['dns'] = parts[4]
+        if parts[5] == 'true':
+            new_conn['direction'] = 'Outbound'
+        else:
+            new_conn['direction'] = 'Inbound'
+        return new_conn
+
+    def _parse_childproc(self, childproc):
+        parts = childproc.split('|')
+        timestamp = datetime.strptime(parts[0], cb_datetime_format)
+        new_childproc = {}
+        new_childproc['procguid'] = parts[1][0:len(parts[1])-9]
+        new_childproc['md5'] = parts[2]
+        new_childproc['path'] = parts[3]
+        new_childproc['pid'] = parts[4]
+
+        new_childproc['terminated'] = False
+        if parts[5] == 'true':
+            new_childproc['terminated'] = True
+
+        new_childproc['tamper_flag'] = False
+        if len(parts) > 6 and parts[6] == 'true':
+            new_childproc['tamper_flag'] = True
+        return new_childproc
+
+    def getChildProcs(self, starting_guid):
+        childproclist = []
+
+        childProcs = self.cb.process_events(self.process.get('id'), 1).get('process').get('childproc_complete')
+        if not childProcs:
+            return
+        for childProc in childProcs:
+            childProc = self._parse_childproc(childProc)
+            child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
+            if child_process:
+                childproclist.append(child_process)
+        return childproclist
+
+    def getNetConns(self, process_guid):
+        netconnslist = []
+
+        events = self.cb.process_events(self.process.get('id'), 1).get('process')
+        if "netconn_complete" in events:
+            netconn_events = events.get('netconn_complete')
+            for netconn in netconn_events:
+                netconn = self._parse_netconn(netconn)
+                netconnslist.append(netconn)
+        return netconnslist
 
     def generate_report(self, starting_guid):
 
@@ -253,13 +330,18 @@ class IncidentReport(object):
 
         # get execution tree
         self.executors = [self.process]
-        self.walk_executors_up(self.process.get('parent_unique_id'), self.executors)
+        self.walk_executors_up(self.process.get('parent_unique_id'),
+                               self.executors)
 
-        # TODO -- walk_executors_down
+        self.childProcs = self.getChildProcs(self.process.get('parent_unique_id'))
 
         # get writer tree
-        self.writers = [self.process]
+        self.writers = []
+        if process_md5 in self.process:
+            self._write_iconfile(self.process['process_md5'])
         self.walk_writers_by_path(hostname, process_path, self.writers)
+
+        self.netconns = self.getNetConns(self.process.get('parent_unique_id'))
 
         #self._report_to_html(starting_guid)
         self._output_from_template(starting_guid)
@@ -270,8 +352,12 @@ class IncidentReport(object):
             return
         parent_guid = str(parent_guid)[0:len(parent_guid)-9]
         parent_process = self.cb.process_summary(parent_guid, 1).get('process', {})
+        if 'process_name' not in parent_process:
+            parent_process['process_name'] = "Unknown"
 
         executors.insert(0, parent_process)
+        if 'process_md5' in parent_process:
+            self._write_iconfile(parent_process['process_md5'])
 
         path = parent_process.get('path')
         if not path or "explorer.exe" in path or "services.exe" in path:
@@ -281,9 +367,10 @@ class IncidentReport(object):
         if parent_guid:
             self.walk_executors_up(parent_guid, executors, depth - 1)
 
-    def walk_writers_by_path(self, hostname, process_path, writers, depth = 3):
+    def walk_writers_by_path(self, hostname, process_path, writers, depth = 1):
         if depth == 0:
             return
+
         writer_processes = self.cb.process_search(
             "filemod:\"%s\" hostname:%s" % (process_path, hostname),
             facet_enable=False).get('results', [])
@@ -291,21 +378,14 @@ class IncidentReport(object):
         for writer in writer_processes:
             writer_path = writer.get('path')
             writers.insert(0, writer)
-
-            if "chrome.exe" in writer_path:
-                break
-            if "outlook.exe" in writer_path:
-                break
-            if "iexplore.exe" in writer_path:
-                break
-            if "firefox.exe" in writer_path:
-                break
             self.walk_writers_by_path(hostname, writer_path, writers, depth - 1)
 
 if __name__ == "__main__":
+    url = "https://cb5.wedgie.org"
+    token = "ba0b846db416d61be453ebacc10250267ae9aaf3"
     rep = IncidentReport(url, token)
-    starting_guid = "00000008-0000-0174-01d1-2188fcffee7a"
-    #starting_guid = "00000004-0000-09a8-01d0-ceebd9b41fbc"
+    #starting_guid = "00000008-0000-0174-01d1-2188fcffee7a"
+    starting_guid = "00000004-0000-09a8-01d0-ceebd9b41fbc"
     rep.generate_report(starting_guid)
 
 
