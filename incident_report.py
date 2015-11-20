@@ -37,9 +37,10 @@ import time
 import socket
 import struct
 import shutil
+import sys
+import optparse
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
-from yattag import Doc, indent
 
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -511,12 +512,35 @@ class IncidentReport(object):
             writers.insert(0, writer)
             self.walk_writers_by_path(hostname, writer_path, writers, depth - 1)
 
+
+def build_cli_parser():
+    parser = optparse.OptionParser(usage="%prog [options]", description="Dump Binary Info")
+
+    #
+    # for each supported output type, add an option
+    #
+    parser.add_option("-c", "--cburl", action="store", default=None, dest="url",
+                      help="CB server's URL.  e.g., http://127.0.0.1 ")
+    parser.add_option("-a", "--apitoken", action="store", default=None, dest="token",
+                      help="API Token for Carbon Black server")
+    parser.add_option("-n", "--no-ssl-verify", action="store_false", default=True, dest="ssl_verify",
+                      help="Do not verify server SSL certificate.")
+    parser.add_option("-g", "--guid", action="store", default=None, dest="guid",
+                      help="Generate a report for this GUID\nExample: -g 00000004-0000-09a8-01d0-ceebd9b41fbc")
+    return parser
+
+def main(argv):
+    parser = build_cli_parser()
+    opts, args = parser.parse_args(argv)
+    if not opts.url or not opts.token or not opts.guid:
+        print "Missing required param; run with --help for usage"
+        sys.exit(-1)
+
+    rep = IncidentReport(opts.url, opts.token)
+    rep.generate_report(opts.guid)
+
 if __name__ == "__main__":
-    url = "https://cb5.wedgie.org"
-    token = "ba0b846db416d61be453ebacc10250267ae9aaf3"
-    rep = IncidentReport(url, token)
-    #starting_guid = "00000008-0000-0174-01d1-2188fcffee7a"
-    starting_guid = "00000004-0000-09a8-01d0-ceebd9b41fbc"
-    rep.generate_report(starting_guid)
+    sys.exit(main(sys.argv[1:]))
+
 
 
