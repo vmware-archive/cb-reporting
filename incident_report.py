@@ -43,16 +43,6 @@ from yattag import Doc, indent
 
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
 
-def get_constants(prefix):
-    """Create a dictionary mapping socket module constants to their names."""
-    return dict((getattr(socket, n), n)
-                for n in dir(socket)
-                if n.startswith(prefix)
-    )
-
-
-protocols = get_constants("IPPROTO_")
-
 class IncidentReport(object):
     def __init__(self, url, token):
         self.sensor = None
@@ -104,6 +94,8 @@ class IncidentReport(object):
                          "executors": self.executors,
                          "childprocs": self.childProcs,
                          "netconns": self.netconns,
+                         "filemods": self.filemods,
+                         "regmods": self.regmods,
                          "report": self}
 
         j2_env = Environment( loader=FileSystemLoader(THIS_DIR),
@@ -252,6 +244,90 @@ class IncidentReport(object):
 
         self.htmlfile.write(indent(doc.getvalue()))
 
+    def _parse_regmod(self, regmod):
+        def _lookup_type(regmodtype):
+            if regmodtype == 1:
+                return 'CreatedKey'
+            elif regmodtype == 2:
+                return 'FirstWrote'
+            elif regmodtype == 4:
+                return 'DeletedKey'
+            elif regmodtype == 8:
+                return 'DeletedValue'
+
+        parts = regmod.split('|')
+        new_regmod = {}
+        timestamp = datetime.strptime(parts[1], cb_datetime_format)
+        new_regmod['timestamp'] = timestamp
+        new_regmod['type'] = _lookup_type(int(parts[0]))
+        new_regmod['path'] = parts[2]
+
+        new_regmod['tamper_flag'] = False
+        if len(parts) > 3 and parts[3] == 'true':
+            new_regmod['tamper_flag'] = True
+        return new_regmod
+
+    def _parse_filemod(self, filemod):
+        def _lookup_type(filemodtype):
+            if filemodtype == 1:
+                return 'CreatedFile'
+            elif filemodtype == 2:
+                return 'FirstWrote'
+            elif filemodtype == 4:
+                return 'Deleted'
+            elif filemodtype == 8:
+                return 'LastWrote'
+
+        def _lookup_filetype(filetype):
+            if filetype == 1:
+                return 'PE'
+            elif filetype == 2:
+                return 'ELF'
+            elif filetype == 3:
+                return 'MachO'
+            elif filetype == 8:
+                return 'EICAR'
+            elif filetype == 0x10:
+                return 'DOC'
+            elif filetype == 0x11:
+                return 'DOCX'
+            elif filetype == 0x30:
+                return 'PDF'
+            elif filetype == 0x40:
+                return 'ZIP'
+            elif filetype == 0x41:
+                return 'LZH'
+            elif filetype == 0x42:
+                return 'LZW'
+            elif filetype == 0x43:
+                return 'RAR'
+            elif filetype == 0x44:
+                return 'TAR'
+            elif filetype == 0x45:
+                return '7Z'
+            else:
+                return 'Unknown'
+
+        if not filemod:
+            return
+
+        parts = filemod.split('|')
+        new_file = {}
+        new_file['type'] = _lookup_type(int(parts[0]))
+        timestamp = datetime.strptime(parts[1], cb_datetime_format)
+        new_file['timestamp'] = timestamp
+        new_file['path'] = parts[2]
+        new_file['md5'] = parts[3]
+        new_file['filetype'] = 'Unknown'
+        if len(parts) > 4 and parts[4] != '':
+            new_file['filetype'] = _lookup_filetype(int(parts[4]))
+
+        new_file['tamper_flag'] = False
+        if len(parts) > 5 and parts[5] == 'true':
+            new_file['tamper_flag'] = True
+
+        return new_file
+
     def _parse_netconn(self, netconn):
         parts = netconn.split('|')
         new_conn = {}
@@ -262,7 +338,6 @@ class IncidentReport(object):
         except:
             new_conn['ipaddr'] = "0.0.0.0"
         new_conn['port'] = int(parts[2])
-        new_conn['protocol'] = protocols[int(parts[3])]
         new_conn['dns'] = parts[4]
         if parts[5] == 'true':
             new_conn['direction'] = 'Outbound'
@@ -288,17 +363,25 @@ class IncidentReport(object):
             new_childproc['tamper_flag'] = True
         return new_childproc
 
+    def getFileMods(self, process_guid):
+        filemodlist = []
+        filemods = self.cb.process_events(self.process.get('id'), 1).get('process').get('filemod_complete')
+        if filemods:
+            for filemod in filemods:
+                filemod = self._parse_filemod(filemod)
+                filemodlist.append(filemod)
+        return filemodlist
+
     def getChildProcs(self, starting_guid):
         childproclist = []
 
         childProcs = self.cb.process_events(self.process.get('id'), 1).get('process').get('childproc_complete')
-        if not childProcs:
-            return
-        for childProc in childProcs:
-            childProc = self._parse_childproc(childProc)
-            child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
-            if child_process:
-                childproclist.append(child_process)
+        if childProcs:
+            for childProc in childProcs:
+                childProc = self._parse_childproc(childProc)
+                child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
+                if child_process:
+                    childproclist.append(child_process)
         return childproclist
 
     def getNetConns(self, process_guid):
@@ -311,6 +394,17 @@ class IncidentReport(object):
                 netconn = self._parse_netconn(netconn)
                 netconnslist.append(netconn)
         return netconnslist
+
+    def getRegMods(self, process_guid):
+        regmodslist = []
+
+        events = self.cb.process_events(self.process.get('id'), 1).get('process')
+        if "regmod_complete" in events:
+            regmods = events.get('regmod_complete')
+            for regmod in regmods:
+                regmod = self._parse_regmod(regmod)
+                regmodslist.append(regmod)
+        return regmodslist
 
     def generate_report(self, starting_guid):
         self.outdir = starting_guid
@@ -353,6 +447,16 @@ class IncidentReport(object):
         self.childProcs = self.getChildProcs(self.process.get('parent_unique_id'))
         for childproc in self.childProcs:
             self._write_iconfile(childproc.get('process_md5'))
+
+        #
+        # Get File Mods
+        #
+        self.filemods = self.getFileMods(self.process.get('parent_unique_id'))
+
+        #
+        # Get Reg Mods
+        #
+        self.regmods = self.getRegMods(self.process.get('parent_unique_id'))
 
         #
         # get writers

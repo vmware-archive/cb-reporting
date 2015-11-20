@@ -35,6 +35,14 @@
         $("[id^=childproccontent").collapse('toggle');
       });
 
+      $("#filemodtabletoggle").on('click', function(e) {
+        $("#filemodtable").collapse('toggle');
+      });
+
+      $("#regmodtabletoggle").on('click', function(e) {
+        $("#regmodtable").collapse('toggle');
+      });
+
   });
   </script>
   <body>
@@ -48,8 +56,9 @@
         <hr />
         <button class="btn btn-default" id="expandall">Expand All</button>
         <button class="btn btn-default" id="collapseall">Collapse All</button>
-        <h2 id="networktabletoggle">Network Connections</h2>
-         <div class="collapse in" id="networkconnectionstable">
+
+        <h3 id="networktabletoggle"><span class="label label-primary">{{ netconns|length }} Network Connections</span></h3>
+         <div class="collapse" id="networkconnectionstable">
             <table class="table table-condensed">
                 <caption>Network Connections
                 </caption>
@@ -60,7 +69,7 @@
                     <th>Port</th>
                     <th>DNS</th>
                     <th>Direction</th>
-                  </td>
+                  </tr>
                 </thead>
                 <tbody>
                 {% for netconn in netconns %}
@@ -75,6 +84,57 @@
                 </tbody>
             </table>
             </div>
+
+        <h3 id="regmodtabletoggle"><span class="label label-primary">{{ regmods|length }} Registry Modifications</span></h3>
+        <div class="collapse" id="regmodtable">
+            <table class="table table-condensed">
+                <caption>Registry Modifications
+                </caption>
+                <thead>
+                  <tr>
+                    <th class ="col-xs-2">Reg Mod Type</th>
+                    <th>Path</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for regmod in regmods %}
+                <tr>
+                    <td>{{regmod.type}}</td>
+                    <td>{{regmod.path}}</td>
+                    <td>{{regmod.timestamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
+
+        <h3 id="filemodtabletoggle"><span class="label label-primary">{{ filemods|length }} File Modifications</span></h3>
+        <div class="collapse" id="filemodtable">
+            <table class="table table-condensed">
+                <caption>File Modifications
+                </caption>
+                <thead>
+                  <tr>
+                    <th class ="col-xs-2">File Mod Type</th>
+                    <th>Path</th>
+                    <th>md5</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for filemod in filemods %}
+                <tr>
+                    <td>{{filemod.type}}</td>
+                    <td>{{filemod.path}}</td>
+                    <td>{{filemod.md5}}</td>
+                    <td>{{filemod.timestamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
+
         <h2 id="writerstoggle">Writers</h2>
         {% for writer in writers %}
         <div id="writer{{loop.index}}">
