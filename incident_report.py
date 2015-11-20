@@ -29,7 +29,7 @@
 
 __author__ = 'jmcfarland'
 
-import cbapi.util.redis_cbapi_wrapper as rcbapi
+import redis_cbapi_wrapper as rcbapi
 import pprint
 import base64
 import os
