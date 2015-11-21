@@ -515,7 +515,7 @@ class IncidentReport(object):
 
             for filemod in fileModEvents:
                 filemod = self._parse_filemod(filemod)
-                if filemod['path'] == process_path:
+                if filemod['path'] == process_path and filemod['type'] == "LastWrote":
                     if not currentCandidate or filemod['timestamp'] > currentCandidate['filemod']['timestamp']:
                         currentCandidate = {'process': writer, 'filemod': filemod}
 

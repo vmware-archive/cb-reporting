@@ -136,10 +136,11 @@ class RedisCbApiWrapper(object):
         proc_events = self._get_redis("proc-events-%s-%d" % (id, segment))
         if proc_events:
             return proc_events
-
-        proc_events = self._cb().process_events(id, segment)
-
-        self._set_redis("proc-events-%s-%d" % (id, segment), proc_events)
+        try:
+            proc_events = self._cb().process_events(id, segment)
+            self._set_redis("proc-events-%s-%d" % (id, segment), proc_events)
+        except:
+            return {}
         return proc_events
 
 
