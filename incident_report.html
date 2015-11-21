@@ -171,6 +171,10 @@
             </table>
             </div>
         </div>
+        {% if loop.index == executors|length %}
+        {% else %}
+        <i class="fa fa-arrow-down fa-2x"></i>
+        {% endif %}
         {% endfor %}
         <br />
         <hr />

@@ -479,7 +479,7 @@ class IncidentReport(object):
         self._output_from_template(starting_guid)
         return
 
-    def walk_executors_up(self, parent_guid, executors, depth = 3):
+    def walk_executors_up(self, parent_guid, executors, depth = 5):
         if depth == 0:
             return
         parent_guid = str(parent_guid)[0:len(parent_guid)-9]
@@ -499,7 +499,7 @@ class IncidentReport(object):
         if parent_guid:
             self.walk_executors_up(parent_guid, executors, depth - 1)
 
-    def walk_writers_by_path(self, hostname, process_path, writers, depth = 1):
+    def walk_writers_by_path(self, hostname, process_path, writers, depth = 5):
         if depth == 0:
             return
 
@@ -507,10 +507,21 @@ class IncidentReport(object):
             "filemod:\"%s\" hostname:%s" % (process_path, hostname),
             facet_enable=False).get('results', [])
 
+        currentCandidate = None
+
         for writer in writer_processes:
-            writer_path = writer.get('path')
-            writers.insert(0, writer)
-            self.walk_writers_by_path(hostname, writer_path, writers, depth - 1)
+
+            fileModEvents = self.cb.process_events(writer.get('id'), 1).get('process',{}).get('filemod_complete',[])
+
+            for filemod in fileModEvents:
+                filemod = self._parse_filemod(filemod)
+                if filemod['path'] == process_path:
+                    if not currentCandidate or filemod['timestamp'] > currentCandidate['filemod']['timestamp']:
+                        currentCandidate = {'process': writer, 'filemod': filemod}
+
+        if currentCandidate:
+            writers.insert(0, currentCandidate['process'])
+            self.walk_writers_by_path(hostname, currentCandidate['process']['path'], writers, depth - 1)
 
 
 def build_cli_parser():
