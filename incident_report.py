@@ -104,7 +104,7 @@ class IncidentReport(object):
 
         if not self.htmlfile:
             self.htmlfile = file(self.outdir + ("/%s.html" % starting_guid), 'wb')
-            self.htmlfile.write( j2_env.get_template(TEMPLATE_FILE).render(template_vars))
+            self.htmlfile.write( j2_env.get_template(TEMPLATE_FILE).render(template_vars).encode('utf-8'))
 
     def _report_to_html(self, starting_guid):
         if not self.htmlfile:
@@ -421,8 +421,9 @@ class IncidentReport(object):
             shutil.copytree("fonts", self.outdir + "/fonts")
             shutil.copytree("js", self.outdir + "/js")
         except:
-            print "Error Copying support files to output directory"
-            print "Files might already exist"
+            pass
+            #print "Error Copying support files to output directory"
+            #print "Files might already exist"
 
         self.process = self.cb.process_summary(starting_guid, 1).get('process', {})
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
@@ -548,7 +549,9 @@ def main(argv):
         sys.exit(-1)
 
     rep = IncidentReport(opts.url, opts.token)
+    print "[+] Generating report for process guid: %s" % opts.guid
     rep.generate_report(opts.guid)
+    print "[+] Report generated in ./%s" % rep.outdir + "/"
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

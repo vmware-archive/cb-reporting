@@ -29,7 +29,7 @@ class RedisCbApiWrapper(object):
 
         #traceback.print_stack()
         # Take this out if you want ... just helps me realize when I am going remote for the data versus local in redis.
-        print "Using remote!"
+        #print "Using remote!"
         return self._cbapi
 
     def _get_redis(self, key):
