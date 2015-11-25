@@ -12,8 +12,15 @@
   <script>
   $(function() {
     $("#hostnametabletoggle").on('click', function(e) {
-        console.log("here")
         $("#hostnametable").collapse('toggle');
+      });
+
+    $("#usernametabletoggle").on('click', function(e) {
+        $("#usernametable").collapse('toggle');
+      });
+
+    $("#processnametabletoggle").on('click', function(e) {
+        $("#processnametable").collapse('toggle');
       });
   });
   </script>
@@ -59,10 +66,13 @@
 
       <hr />
 
+      <h3>
+        <span class="label label-primary" id="usernametabletoggle">
+          Top Usernames
+        </span>
+      </h3>
+      <div class="collapse in" id="usernametable">
       <table class="table table-condensed">
-        <caption>
-            Top Usernames
-        </caption>
         <thead>
           <tr>
             <th class="col-xs-2">Username</th>
@@ -89,11 +99,15 @@
         </tr>
         {% endfor %}
       </table>
+      </div>
 
+      <h3>
+        <span class="label label-primary" id="processnametabletoggle">
+          Top Process Names
+        </span>
+      </h3>
+      <div class="collapse in" id="processnametable">
       <table class="table table-condensed">
-        <caption>
-            Top Process Names
-        </caption>
         <thead>
           <tr>
             <th class="col-xs-2">Process Name</th>
@@ -120,6 +134,7 @@
         </tr>
         {% endfor %}
       </table>
+      </div>
 
 
 

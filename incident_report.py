@@ -103,7 +103,7 @@ class IncidentReport(object):
                               trim_blocks=True)
 
         if not self.htmlfile:
-            self.htmlfile = file(self.outdir + ("/%s.html" % starting_guid), 'wb')
+            self.htmlfile = file(self.outdir + "/index.html", 'wb')
             self.htmlfile.write( j2_env.get_template(TEMPLATE_FILE).render(template_vars).encode('utf-8'))
 
     def _report_to_html(self, starting_guid):
