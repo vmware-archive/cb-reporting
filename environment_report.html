@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Environment Report for</title>
+    <script src="../js/jquery-1.11.3.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+  </head>
+
+  <script>
+  $(function() {
+    $("#hostnametabletoggle").on('click', function(e) {
+        console.log("here")
+        $("#hostnametable").collapse('toggle');
+      });
+  });
+  </script>
+  <body>
+    <div class="container">
+      <div class="container-fluid">
+      <h2>Environment Summary</h2>
+      <h3>
+        <span class="label label-primary" id="hostnametabletoggle">
+          Top Hostnames
+        </span>
+      </h3>
+      <div class="collapse in" id="hostnametable">
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th class="col-xs-2">Hostname</th>
+            <th class="col-xs-2">Percent</th>
+            <th class="col-xs-2">Ratio</th>
+            <th class="col-xs-2">Value</th>
+          </tr>
+        </thead>
+
+        {% for hostname in facets.top_hostnames %}
+        <tr>
+          <td>
+            {{hostname.name}}
+          </td>
+          <td>
+            {{hostname.percent}}
+          </td>
+          <td>
+            {{hostname.ratio}}
+          </td>
+          <td>
+            {{hostname.value}}
+          </td>
+        </tr>
+        {% endfor %}
+        </div>
+      </table>
+      </div>
+
+      <hr />
+
+      <table class="table table-condensed">
+        <caption>
+            Top Usernames
+        </caption>
+        <thead>
+          <tr>
+            <th class="col-xs-2">Username</th>
+            <th class="col-xs-2">Percent</th>
+            <th class="col-xs-2">Ratio</th>
+            <th class="col-xs-2">Value</th>
+          </tr>
+        </thead>
+
+        {% for username in facets.top_usernames %}
+        <tr>
+          <td>
+            {{username.name}}
+          </td>
+          <td>
+            {{username.percent}}
+          </td>
+          <td>
+            {{username.ratio}}
+          </td>
+          <td>
+            {{username.value}}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+      <table class="table table-condensed">
+        <caption>
+            Top Process Names
+        </caption>
+        <thead>
+          <tr>
+            <th class="col-xs-2">Process Name</th>
+            <th class="col-xs-2">Percent</th>
+            <th class="col-xs-2">Ratio</th>
+            <th class="col-xs-2">Value</th>
+          </tr>
+        </thead>
+
+        {% for process in facets.top_process_names %}
+        <tr>
+          <td>
+            {{process.name}}
+          </td>
+          <td>
+            {{process.percent}}
+          </td>
+          <td>
+            {{process.ratio}}
+          </td>
+          <td>
+            {{process.value}}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
