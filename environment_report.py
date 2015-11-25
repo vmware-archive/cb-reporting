@@ -47,7 +47,7 @@ class IncidentReport(object):
 
         template_vars = {"facets": self.facet}
 
-        pprint.pprint(self.facet)
+        #pprint.pprint(self.facet)
 
         j2_env = Environment( loader=FileSystemLoader(THIS_DIR),
                               trim_blocks=True)
@@ -90,31 +90,28 @@ class IncidentReport(object):
         self.facet['top_hostnames'] = hostnames
         self.facet['top_process_names'] = process_names
 
-'''
-def populate_java_hits(cb, time_range):
-    hits = []
-    results = cb.process_search(r"%s (process_name:java.exe or process_name:javaw.exe)" % time_range)
-#    pprint.pprint(results)
-    facets = results.get('facets')
-    process_md5s = facets.get('process_md5')
-    for process_dict in process_md5s:
-        process_md5 = process_dict.get('name')
-        process_count = process_dict.get('value')
-        try:
-            result = cb.binary_summary(process_md5)
-            hit = (result.get('product_version'), result.get('file_version'), process_count, result.get('host_count'), result.get('server_added_timestamp'), process_md5)
-            hits.append(hit)
-        except:
-            pass
-    hits = sorted(hits, key=lambda tup: tup[0])
-    unique_versions = set([hit[0] for hit in hits])
+    def populate_java_hits(self, cb, time_range):
+        hits = []
+        results = cb.process_search(r"%s (process_name:java.exe or process_name:javaw.exe)" % time_range)
+        facets = results.get('facets')
+        process_md5s = facets.get('process_md5')
+        for process_dict in process_md5s:
+            process_md5 = process_dict.get('name')
+            process_count = process_dict.get('value')
+            try:
+                result = cb.binary_summary(process_md5)
+                hit = (result.get('product_version'), result.get('file_version'), process_count, result.get('host_count'), result.get('server_added_timestamp'), process_md5)
+                hits.append(hit)
+            except:
+                pass
+        hits = sorted(hits, key=lambda tup: tup[0])
+        unique_versions = set([hit[0] for hit in hits])
 
-    response = {}
-    response['java']['unique_count'] = unique_versions
-    response['java']['details'] = hits
+        self.java = {}
+        self.java['unique_count'] = unique_versions
+        self.java['details'] = hits
 
-    return response
-'''
+        #pprint.pprint(self.java)
 
 def build_cli_parser():
     parser = optparse.OptionParser(usage="%prog [options]", description="Dump Binary Info")
@@ -148,6 +145,7 @@ def main(argv):
 
     report = IncidentReport(cb.server, cb.token)
     report.populate_top_hits(cb, time_range)
+    report.populate_java_hits(cb, time_range)
     report.generate_report("test")
 
     #pprint.pprint(results)
