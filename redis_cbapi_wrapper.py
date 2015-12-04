@@ -33,16 +33,25 @@ class RedisCbApiWrapper(object):
         return self._cbapi
 
     def _get_redis(self, key):
-        val = self._rclient.get(key)
-        if val:
-            return simplejson.loads(val)
-        return None
+        try:
+            val = self._rclient.get(key)
+            if val:
+                return simplejson.loads(val)
+        except Exception as e:
+            return None
+        else:
+            return None
 
     def _set_redis(self, key, value):
-        if type(value) != str:
-            return self._rclient.set(key, simplejson.dumps(value))
+        try:
+            if type(value) != str:
+                return self._rclient.set(key, simplejson.dumps(value))
+            else:
+                return self._rclient.set(key, value)
+        except Exception as e:
+            return None
         else:
-            return self._rclient.set(key, value)
+            return None
 
 
     def get_processes_from_solr(self, args):
