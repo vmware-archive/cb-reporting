@@ -8,7 +8,10 @@ import time
 import requests
 
 import cbapi
-import redis
+try:
+    import redis
+except:
+    pass
 import simplejson
 
 class RedisCbApiWrapper(object):
@@ -20,7 +23,13 @@ class RedisCbApiWrapper(object):
     def __init__(self, cburl, token, redis_host='localhost', redis_port=6379):
         self._cburl = cburl
         self._token = token
-        self._rclient = redis.StrictRedis(host=redis_host, port=redis_port, db=0, socket_timeout=2)
+        try:
+            self._rclient = redis.StrictRedis(host=redis_host,
+                                              port=redis_port,
+                                              db=0,
+                                              socket_timeout=2)
+        except:
+            pass
         self._cbapi = None
 
     def _cb(self):
