@@ -51,7 +51,6 @@ class IncidentReport(object):
 
         self.cb = rcbapi.RedisCbApiWrapper(url, token)
 
-
     def _write_iconfile(self, md5):
         if not md5:
             return
@@ -73,6 +72,12 @@ class IncidentReport(object):
         publisher = binary_details.get('publisher', '(unknown)')
 
         return "%s - %s - %s - %s - %s" % (md5, sigstatus, version, company_name, publisher)
+
+    def _get_process_count(self, process_md5):
+        return self.cb.process_search("process_md5:%s" % process_md5, start=0, rows=0, facet_enable=False)
+
+    def _get_process_host_count(self, process_md5):
+        return self.cb.host_count(process_md5)
 
     def _get_process_frequency(self, process_md5):
         process_count = self.cb.process_search("process_md5:%s" % process_md5, start=0, rows=0, facet_enable=False)
@@ -105,145 +110,6 @@ class IncidentReport(object):
         if not self.htmlfile:
             self.htmlfile = file(self.outdir + "/index.html", 'wb')
             self.htmlfile.write( j2_env.get_template(TEMPLATE_FILE).render(template_vars).encode('utf-8'))
-
-    def _report_to_html(self, starting_guid):
-        if not self.htmlfile:
-            self.htmlfile = file(self.outdir + ("/%s.html" % starting_guid), 'wb')
-
-        process_md5 = self.process.get('process_md5')
-        process_count, host_count = self._get_process_frequency(process_md5)
-
-        doc, tag, text = Doc().tagtext()
-
-        doc.asis('<!DOCTYPE html>')
-        with tag('html'):
-            with tag('head'):
-                with tag('title'):
-                    text("Incident Report for %s on %s" % (self.process.get('process_name'),
-                                                           self.process.get('hostname')))
-                doc.asis("""<link rel="stylesheet" type="text/css" href="../bootstrap.min.css">""")
-                doc.asis("""<link rel="stylesheet" type="text/css" href="../bootstrap-theme.min.css">""")
-            with tag('body'):
-                with tag('div', klass='container'):
-                    with tag('div', klass="container-fluid"):
-                        with tag('div', klass="row"):
-                            with tag('h2'):
-                                text("Incident Summary: ")
-                                self._write_iconfile(process_md5)
-                                doc.stag('img', src="%s.png" % process_md5)
-                                text(" '%s' on %s" % (self.process.get('process_name'),
-                                                    self.process.get('hostname')))
-
-                            with tag('h3'):
-                                text("%s" % process_md5)
-
-                        with tag('div', klass="row"):
-                            text("Executed at %s by %s" % (self.process.get('start'),
-                                                           self.process.get('username')))
-                        with tag('div', klass="row"):
-                            text("Process seen %d times and seen on %d hosts" % (process_count.get('total_results'),
-                                                                                 host_count.get('hostCount')))
-
-                        doc.stag('hr')
-
-                        with tag('h3'):
-                            text("Writer Tree")
-
-                        for index, writer in enumerate(self.writers):
-                            with tag('div', id="writer-%d" % index):
-                                self._write_iconfile(writer.get('process_md5'))
-                                doc.stag('img', width="32", src="%s.png" % writer.get('process_md5'))
-
-                                with tag('strong'):
-                                    text(" %s " % (writer.get('process_name')))
-                                text("-> %s" % (writer.get('path')))
-                                doc.stag('br')
-                                text("(%s)" % writer.get('cmdline'))
-                                doc.stag('br')
-                                text("(%s)" % writer.get('id'))
-                                doc.stag('br')
-                                text(self._get_binary_info(writer.get('process_md5')))
-                                doc.stag('br')
-                                process_count, host_count = self._get_process_frequency(writer.get('process_md5'))
-                                text("Process seen %d times and seen on %d hosts" % (process_count.get('total_results'),
-                                                                                     host_count.get('hostCount')))
-                                doc.stag('br')
-                                doc.stag('br')
-
-                        doc.stag('hr')
-
-                        with tag('div', klass="row"):
-                            with tag('h3'):
-                                text("Execution Tree")
-
-                            margin_size = 0
-                            for executor in self.executors:
-                                with tag('div', style="margin-left:%dpx; width:100%%;" % margin_size):
-                                    margin_size += 30
-                                    self._write_iconfile(executor.get('process_md5'))
-                                    doc.stag('img', width="32", src="%s.png" % executor.get('process_md5'))
-
-                                    with tag('strong'):
-                                        text(" %s" % executor.get('process_name'))
-                                    text("-> %s" % (executor.get('path')))
-                                    doc.stag('br')
-                                    text("(%s)" % executor.get('cmdline'))
-                                    doc.stag('br')
-                                    text(self._get_binary_info(executor.get('process_md5')))
-                                    doc.stag('br')
-                                    process_count, host_count = self._get_process_frequency(executor.get('process_md5'))
-                                    text("Process seen %d times and seen on %d hosts" % (process_count.get('total_results'),
-                                                                                         host_count.get('hostCount')))
-                                    doc.stag('br')
-                                    doc.stag('br')
-
-                        doc.stag('hr')
-
-                        with tag('div', klass="row"):
-                            with tag('h3'):
-                                text("Root Cause")
-
-                            writer = self.writers[0]
-                            written_path = self.writers[1].get('path')
-                            writer_events = self.cb.process_events(writer.get('id'), 1).get('process')
-                            filemod_completes = writer_events.get('filemod_complete', [])
-                            netconn_completes = writer_events.get('netconn_complete', [])
-                            write_timestamp = None
-                            for filemod_complete in filemod_completes:
-                                fields = filemod_complete.split("|")
-                                if fields[0] == "1" and fields[2] == written_path:
-                                    write_timestamp = fields[1]
-                                    break
-                            if write_timestamp:
-
-                                potential_netconns = []
-                                for netconn_complete in netconn_completes:
-                                    fields = netconn_complete.split("|")
-                                    if fields[0] <= write_timestamp:
-                                        potential_netconns.append(fields)
-                                    else:
-                                        break
-                                for potential_netconn in potential_netconns:
-                                    # TODO -- cleaner netconn stuff
-                                    domain = potential_netconn[4]
-                                    if domain:
-                                        resp = self.cb.process_search("domain:%s" % domain, start=0, rows=0, facet_enable=False)
-                                        total_results = resp.get('total_results')
-                                        if total_results < 1000:
-                                            text("%s => %s:%s (%d)" % ( potential_netconn[0],
-                                                                        potential_netconn[4],
-                                                                        potential_netconn[2],
-                                                                        total_results))
-                                            doc.stag("br")
-                                with tag('strong'):
-                                    text("%s => %s wrote %s" % (write_timestamp, writer.get('process_name'), written_path))
-                                doc.stag("br")
-
-                    doc.stag('br')
-                    doc.stag('br')
-                    doc.stag('br')
-
-        self.htmlfile.write(indent(doc.getvalue()))
 
     def _parse_regmod(self, regmod):
         def _lookup_type(regmodtype):
@@ -380,6 +246,11 @@ class IncidentReport(object):
         if childProcs:
             for childProc in childProcs:
                 childProc = self._parse_childproc(childProc)
+                if childProc['terminated']:
+                    #
+                    # We don't want to double count child procs
+                    #
+                    continue
                 child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
                 if child_process:
                     childproclist.append(child_process)
@@ -526,8 +397,8 @@ class IncidentReport(object):
 
 
 def build_cli_parser():
-    parser = optparse.OptionParser(usage="%prog [options]", description="Dump Binary Info")
-
+    parser = optparse.OptionParser(usage="%prog [options]",
+                                   description="Generates an Incident Report given a process guid")
     #
     # for each supported output type, add an option
     #
@@ -545,7 +416,7 @@ def main(argv):
     parser = build_cli_parser()
     opts, args = parser.parse_args(argv)
     if not opts.url or not opts.token or not opts.guid:
-        print "Missing required param; run with --help for usage"
+        parser.print_help()
         sys.exit(-1)
 
     rep = IncidentReport(opts.url, opts.token)
