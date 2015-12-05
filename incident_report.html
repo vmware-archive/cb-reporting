@@ -43,6 +43,8 @@
         $("#regmodtable").collapse('toggle');
       });
 
+      $('.fa').css('cursor', 'pointer');
+
   });
   </script>
   <body>
@@ -53,11 +55,26 @@
         <h3>{{process_md5}}</h3>
         Executed at {{process.start}} by {{process.username}}<br>
         Process seen {{process_count.total_results}} times and seen on {{host_count.hostCount}} hosts
+
+        <table class="table table-condensed">
+          <caption>Binary Details
+          </caption>
+          <tbody>
+          <tr>
+            <td>Binary MD5 Hash</td>
+            <td>{{process_md5}}</td>
+          </tr>
+          </tbody>
+        </table>
+
         <hr />
+
         <button class="btn btn-default" id="expandall">Expand All</button>
         <button class="btn btn-default" id="collapseall">Collapse All</button>
 
-        <h3 id="networktabletoggle"><span class="label label-primary">{{ netconns|length }} Network Connections</span></h3>
+        <h3 id="networktabletoggle">
+          <span class="label label-primary">{{ netconns|length }} Network Connections</span>
+        </h3>
          <div class="collapse" id="networkconnectionstable">
             <table class="table table-condensed">
                 <caption>Network Connections
@@ -139,12 +156,17 @@
         <hr />
         <br />
 
-        <h2 id="writerstoggle">Writers Tree <i class="fa fa-level-down"></i></h2>
+        <h2>Writers Tree <i id="writerstoggle" class="fa fa-level-down"></i></h2>
         {% for writer in writers %}
         <div id="writer{{loop.index}}">
             <h3 data-toggle="collapse" data-target="#writercontent{{loop.index}}">
               <img width="32" src="{{writer.get('process_md5')}}.png" />
-                <span class="label label-default">{{writer.process_name}}</span>
+                {% if loop.index == writers|length %}
+                <span class="label label-danger">
+                {% else %}
+                <span class="label label-warning">
+                {% endif %}
+                {{writer.process_name}}</span>
             </h3>
             <div class="collapse in" id="writercontent{{loop.index}}">
             <table class="table table-condensed">
@@ -171,7 +193,7 @@
             </table>
             </div>
         </div>
-        {% if loop.index == executors|length %}
+        {% if loop.index == writers|length %}
         {% else %}
         <i class="fa fa-arrow-down fa-2x"></i>
         {% endif %}
@@ -179,7 +201,7 @@
         <br />
         <hr />
         <br />
-          <h2 id="executiontoggle">Execution Tree <i class="fa fa-level-down"></i></h2>
+          <h2>Execution Tree <i id="executiontoggle" class="fa fa-level-down"></i></h2>
           {% for executor in executors %}
           <div id="executor{{loop.index}}">
           <h3 data-toggle="collapse" data-target="#executorcontent{{loop.index}}">
@@ -190,7 +212,13 @@
             "{{executor.get('process_md5')}}.png"
             {% endif %}
             >
-            <span class="label label-default">{{executor.process_name}}</span>
+
+            {% if loop.index == executors|length %}
+            <span class="label label-danger">
+            {% else %}
+            <span class="label label-warning">
+            {% endif %}
+            {{executor.process_name}}</span>
           </h3>
 
             <div class="collapse in" id="executorcontent{{loop.index}}">
@@ -228,7 +256,7 @@
         <hr />
         <br />
 
-        <h2 id="childproctoggle">Child Processes <i class="fa fa-level-down"></i></h2>
+        <h2>Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
           {% for childproc in childprocs %}
           <div id="childproc{{loop.index}}">
           <h3 data-toggle="collapse" data-target="#childproccontent{{loop.index}}">

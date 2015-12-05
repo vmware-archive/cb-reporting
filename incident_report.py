@@ -41,8 +41,14 @@ import sys
 import optparse
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
+from progress.bar import Bar
 
+toolbar_width = 40
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
+#
+# Progress Bar
+#
+bar = Bar('Generating', max=10)
 
 class IncidentReport(object):
     def __init__(self, url, token):
@@ -279,6 +285,7 @@ class IncidentReport(object):
         return regmodslist
 
     def generate_report(self, starting_guid):
+        global bar
         self.outdir = starting_guid
 
         try:
@@ -293,11 +300,17 @@ class IncidentReport(object):
             shutil.copytree("js", self.outdir + "/js")
         except:
             pass
-            #print "Error Copying support files to output directory"
-            #print "Files might already exist"
+
+        bar.next()
 
         self.process = self.cb.process_summary(starting_guid, 1).get('process', {})
+        bar.next()
+
+        self.binary = self.cb.binary_summary(self.process.get('process_md5'))
+        bar.next()
+
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
+        bar.next()
 
         process_path = self.process.get('path')
         process_md5 = self.process.get('process_md5')
@@ -313,6 +326,7 @@ class IncidentReport(object):
                                self.executors)
         for executor in self.executors:
             self._write_iconfile(executor.get('process_md5'))
+        bar.next()
 
         #
         # Get all child procs
@@ -320,24 +334,28 @@ class IncidentReport(object):
         self.childProcs = self.getChildProcs(self.process.get('parent_unique_id'))
         for childproc in self.childProcs:
             self._write_iconfile(childproc.get('process_md5'))
+        bar.next()
 
         #
         # Get File Mods
         #
         self.filemods = self.getFileMods(self.process.get('parent_unique_id'))
+        bar.next()
 
         #
         # Get Reg Mods
         #
         self.regmods = self.getRegMods(self.process.get('parent_unique_id'))
+        bar.next()
 
         #
         # get writers
         #
-        self.writers = []
+        self.writers = [self.process]
         self.walk_writers_by_path(hostname, process_path, self.writers)
         for writer in self.writers:
             self._write_iconfile(writer.get('process_md5'))
+        bar.next()
 
         #
         # Write our own icon
@@ -347,8 +365,10 @@ class IncidentReport(object):
 
         self.netconns = self.getNetConns(self.process.get('parent_unique_id'))
 
-        #self._report_to_html(starting_guid)
         self._output_from_template(starting_guid)
+        bar.next()
+
+        bar.finish()
         return
 
     def walk_executors_up(self, parent_guid, executors, depth = 5):
