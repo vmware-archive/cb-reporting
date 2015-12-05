@@ -44,6 +44,7 @@
       });
 
       $('.fa').css('cursor', 'pointer');
+      $('.label').css('cursor', 'pointer');
 
   });
   </script>
@@ -159,12 +160,12 @@
         <h2>Writers Tree <i id="writerstoggle" class="fa fa-level-down"></i></h2>
         {% for writer in writers %}
         <div id="writer{{loop.index}}">
-            <h3 data-toggle="collapse" data-target="#writercontent{{loop.index}}">
+            <h3>
               <img width="32" src="{{writer.get('process_md5')}}.png" />
                 {% if loop.index == writers|length %}
-                <span class="label label-danger">
+                <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-danger">
                 {% else %}
-                <span class="label label-warning">
+                <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-warning">
                 {% endif %}
                 {{writer.process_name}}</span>
             </h3>
@@ -204,19 +205,18 @@
           <h2>Execution Tree <i id="executiontoggle" class="fa fa-level-down"></i></h2>
           {% for executor in executors %}
           <div id="executor{{loop.index}}">
-          <h3 data-toggle="collapse" data-target="#executorcontent{{loop.index}}">
-            <img width="32" src=
+          <h3>
+
             {% if not executor.get('process_md5') %}
-            "default.png"
+            <img width="32" src="default.png">
             {% else %}
-            "{{executor.get('process_md5')}}.png"
+            <img width="32" src="{{executor.get('process_md5')}}.png">
             {% endif %}
-            >
 
             {% if loop.index == executors|length %}
-            <span class="label label-danger">
+            <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-danger">
             {% else %}
-            <span class="label label-warning">
+            <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-warning">
             {% endif %}
             {{executor.process_name}}</span>
           </h3>
@@ -259,9 +259,9 @@
         <h2>Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
           {% for childproc in childprocs %}
           <div id="childproc{{loop.index}}">
-          <h3 data-toggle="collapse" data-target="#childproccontent{{loop.index}}">
+          <h3>
             <img width="32" src="{{childproc.get('process_md5')}}.png" />
-            <span class="label label-default">{{childproc.process_name}}</span>
+            <span data-toggle="collapse" data-target="#childproccontent{{loop.index}}" class="label label-default">{{childproc.process_name}}</span>
           </h3>
           <div class="collapse in" id="childproccontent{{loop.index}}">
             <table class="table table-condensed">
