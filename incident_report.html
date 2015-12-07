@@ -53,7 +53,6 @@
       <div class="container-fluid">
         <h2>Incident Summary: <img src="{{process_md5}}.png" />
         {{process.process_name}} on {{process.hostname}}</h2>
-        <h3>{{binary.md5}}</h3>
         Executed at {{process.start}} by {{process.username}}<br>
         Process seen {{process_count.total_results}} times and seen on {{host_count.hostCount}} hosts<br>
         Report Generated at {{time_generated}} from CB Server Url: {{cbserver}}
@@ -61,10 +60,16 @@
         <table class="table table-condensed">
           <caption>Binary Details
           </caption>
+          <thead>
+            <tr>
+              <th class ="col-xs-2">Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
           <tbody>
           <tr>
-            <td class ="col-xs-2">Binary MD5 Hash</td>
-            <td>{{binary.md5}}</td>
+            <td>Binary MD5 Hash</td>
+            <td><b>{{binary.md5}}</b></td>
           </tr>
           <tr>
             <td>Executable Image</td>
@@ -74,11 +79,19 @@
             <td>{{binary.orig_mod_len}}B</td>
           <tr>
             <td>Signed</td>
-            <td>{{binary.signed}}</td>
+            <td>{{binary.digsig_result}}</td>
           </tr>
           <tr>
-            <td>Legal CopyRight</td>
-            <td>{{binary.legal_copyright}}</td>
+            <td>Digital Signature Publisher</td>
+            <td>{{binary.digsig_publisher}}</td>
+          </tr>
+          <tr>
+            <td>Digital Signature Issuer</td>
+            <td>{{binary.digsig_issuer}}</td>
+          </tr>
+          <tr>
+            <td>Digital Signature Company Name</td>
+            <td>{{binary.company_name}}</td>
           </tr>
           {% for filename in binary.observed_filename %}
           <tr>
