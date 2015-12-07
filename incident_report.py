@@ -54,6 +54,7 @@ class IncidentReport(object):
     def __init__(self, url, token):
         self.sensor = None
         self.htmlfile = None
+        self.cbserver = url
 
         self.cb = rcbapi.RedisCbApiWrapper(url, token)
 
@@ -108,6 +109,10 @@ class IncidentReport(object):
                          "netconns": self.netconns,
                          "filemods": self.filemods,
                          "regmods": self.regmods,
+                         "binary" : self.binary,
+                         "feed_hits" : self.feed_hits,
+                         "time_generated": self.time_generated,
+                         "cbserver": self.cbserver,
                          "report": self}
 
         j2_env = Environment( loader=FileSystemLoader(THIS_DIR),
@@ -286,6 +291,7 @@ class IncidentReport(object):
 
     def generate_report(self, starting_guid):
         global bar
+        self.time_generated = datetime.now()
         self.outdir = starting_guid
 
         try:
@@ -300,13 +306,28 @@ class IncidentReport(object):
             shutil.copytree("js", self.outdir + "/js")
         except:
             pass
-
         bar.next()
 
         self.process = self.cb.process_summary(starting_guid, 1).get('process', {})
         bar.next()
 
+        #
+        # Get Feed hits
+        #
+        self.feed_hits = []
+
+        self.process_events = self.cb.process_events(starting_guid, 1).get('process', {})
+
+        if 'alliance_hits' in self.process_events:
+            for key, value in self.process_events['alliance_hits'].iteritems():
+                tempdict = {}
+                tempdict['display_name'] = value['feedinfo']['display_name']
+                tempdict['summary'] = value['feedinfo']['summary']
+                tempdict['number_of_hits'] = len(value['hits'])
+                self.feed_hits.append(tempdict)
+
         self.binary = self.cb.binary_summary(self.process.get('process_md5'))
+        pprint.pprint(self.binary)
         bar.next()
 
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
@@ -374,7 +395,10 @@ class IncidentReport(object):
     def walk_executors_up(self, parent_guid, executors, depth = 5):
         if depth == 0:
             return
-        parent_guid = str(parent_guid)[0:len(parent_guid)-9]
+        try:
+            parent_guid = str(parent_guid)[0:len(parent_guid)-9]
+        except:
+            pass
         parent_process = self.cb.process_summary(parent_guid, 1).get('process', {})
         if 'process_name' not in parent_process:
             parent_process['process_name'] = "Unknown"
