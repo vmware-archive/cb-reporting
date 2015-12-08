@@ -52,10 +52,11 @@
     <div class="container">
       <div class="container-fluid">
         <h2>Incident Summary: <img src="{{process_md5}}.png" />
-        {{process.process_name}} on {{process.hostname}}</h2>
-        Executed at {{process.start}} by {{process.username}}<br>
-        Process seen {{process_count.total_results}} times and seen on {{host_count.hostCount}} hosts<br>
-        Report Generated at {{time_generated}} from CB Server Url: {{cbserver}}
+        <b>{{process.process_name}}</b> on <b>{{process.hostname}}</b></h2>
+        Executed at <b>{{process.start}}</b> by <b>{{process.username}}</b><br>
+        Process seen <b>{{process_count.total_results}}</b> times and
+        seen on <b>{{host_count.hostCount}}</b> hosts<br>
+        Report Generated at <b>{{time_generated}}</b> from CB Server Url: <b>{{cbserver}}</b>
 
         <table class="table table-condensed">
           <caption>Binary Details
@@ -243,7 +244,7 @@
                 </tr>
                 <tr>
                     <td>Process GUID</td>
-                    <td>{{writer.id}}</td>
+                    <td>{{writer.unique_id}}</td>
                 </tr>
                 <tr>
                     <td>Binary Information</td>
