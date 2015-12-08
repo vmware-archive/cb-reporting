@@ -327,7 +327,6 @@ class IncidentReport(object):
                 self.feed_hits.append(tempdict)
 
         self.binary = self.cb.binary_summary(self.process.get('process_md5'))
-        pprint.pprint(self.binary)
         bar.next()
 
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
@@ -348,6 +347,8 @@ class IncidentReport(object):
         for executor in self.executors:
             self._write_iconfile(executor.get('process_md5'))
         bar.next()
+
+        self.walk_executors_down(self.process['unique_id'], self.executors)
 
         #
         # Get all child procs
@@ -391,6 +392,27 @@ class IncidentReport(object):
 
         bar.finish()
         return
+
+    def walk_executors_down(self, process_guid, executors, depth = 5):
+        if depth == 0:
+            return
+        try:
+            process_guid = str(process_guid)[0:len(process_guid)-9]
+        except:
+            pass
+
+        start_time = None
+        currentCandidate = None
+
+        process_summary = self.cb.process_summary(process_guid,1)
+        for child in process_summary['children']:
+            if not currentCandidate or start_time < child['start']:
+                currentCandidate = child
+
+        if currentCandidate:
+            executors.append(child)
+            self.walk_executors_down(child['unique_id'], executors, depth - 1)
+
 
     def walk_executors_up(self, parent_guid, executors, depth = 5):
         if depth == 0:

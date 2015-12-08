@@ -272,7 +272,7 @@
             <img width="32" src="{{executor.get('process_md5')}}.png">
             {% endif %}
 
-            {% if loop.index == executors|length %}
+            {% if process.unique_id == executor.unique_id %}
             <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-danger">
             {% else %}
             <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-warning">
@@ -296,7 +296,7 @@
                 </tr>
                 <tr>
                     <td>Process GUID</td>
-                    <td>{{executor.id}}</td>
+                    <td>{{executor.unique_id}}</td>
                 </tr>
                 <tr>
                     <td>Binary Information</td>
@@ -315,7 +315,7 @@
         <hr />
         <br />
 
-        <h2>Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
+        <h2>All Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
           {% for childproc in childprocs %}
           <div id="childproc{{loop.index}}">
           <h3>
@@ -337,7 +337,7 @@
                 </tr>
                 <tr>
                     <td>Process GUID</td>
-                    <td>{{childproc.id}}</td>
+                    <td>{{childproc.unique_id}}</td>
                 </tr>
                 <tr>
                     <td>Binary Information</td>
