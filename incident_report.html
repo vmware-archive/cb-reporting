@@ -56,7 +56,9 @@
         Executed at <b>{{process.start}}</b> by <b>{{process.username}}</b><br>
         Process seen <b>{{process_count.total_results}}</b> times and
         seen on <b>{{host_count.hostCount}}</b> hosts<br>
-        Report Generated at <b>{{time_generated}}</b> from CB Server Url: <b>{{cbserver}}</b>
+        Report Generated at <b>{{time_generated}}</b> from CB Server Url: <b>{{cbserver}}</b><br>
+        Carbon Black Process Analysis of GUID:
+        <a href="{{cbserver}}/#analyze/{{process.id}}/1"><b>{{process.id}}</b></a>
 
         <table class="table table-condensed">
           <caption>Binary Details
@@ -85,10 +87,6 @@
           <tr>
             <td>Digital Signature Publisher</td>
             <td>{{binary.digsig_publisher}}</td>
-          </tr>
-          <tr>
-            <td>Digital Signature Issuer</td>
-            <td>{{binary.digsig_issuer}}</td>
           </tr>
           <tr>
             <td>Digital Signature Company Name</td>
