@@ -324,6 +324,7 @@ class IncidentReport(object):
             shutil.copytree("css", self.outdir + "/css")
             shutil.copytree("fonts", self.outdir + "/fonts")
             shutil.copytree("js", self.outdir + "/js")
+            shutil.copyfile("banner_logo.png", self.outdir + "/banner_logo.png")
         except:
             pass
         bar.next()

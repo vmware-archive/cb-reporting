@@ -48,10 +48,34 @@
 
   });
   </script>
+  <style>
+    .navbar-brand>img {
+       max-height: 100%;
+       height: 100%;
+       width: auto;
+       margin: 0 auto;
+
+
+       /* probably not needed anymore, but doesn't hurt */
+       -o-object-fit: contain;
+       object-fit: contain;
+
+    }
+    </style>
   <body>
     <div class="container">
+      <nav class="navbar navbar-default navbar-inverse" style="margin-top: 20px">
+          <div class="container-fluid">
+              <div class="navbar-header">
+                  <a class="navbar-brand" href="#"><img src="banner_logo.png"></a>
+              </div>
+              <div class="collapse navbar-collapse navbar-right">
+                  <p class="navbar-text" id="status_string">Incident Summary Report</p>
+              </div>
+          </div>
+      </nav>
       <div class="container-fluid">
-        <h2>Incident Summary: <img src="{{process_md5}}.png" />
+        <h2><img src="{{process_md5}}.png" />
         <b>{{process.process_name}}</b> on <b>{{process.hostname}}</b></h2>
         Executed at <b>{{process.start}}</b> by <b>{{process.username}}</b><br>
         Process seen <b>{{process_count.total_results}}</b> times and
