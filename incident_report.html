@@ -104,6 +104,47 @@
           </tbody>
         </table>
 
+        <div class="col-xs-6">
+          <table class="table table-condensed">
+            <caption>Seen Hostnames
+            </caption>
+            <thead>
+              <tr>
+                <th>Hostname</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for hostname in hostnames %}
+            <tr>
+              <td>{{hostname.hostname}}</td>
+              <td>{{hostname.percentage}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-xs-6">
+          <table class="table table-condensed">
+            <caption>Seen File Paths
+            </caption>
+            <thead>
+              <tr>
+                <th>File Path</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for filepath in filepaths %}
+            <tr>
+              <td>{{filepath.filepath}}</td>
+              <td>{{filepath.percentage}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
         <table class="table table-condensed">
           <caption>Feed Hits
           </caption>

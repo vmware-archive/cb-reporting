@@ -113,6 +113,8 @@ class IncidentReport(object):
                          "feed_hits" : self.feed_hits,
                          "time_generated": self.time_generated,
                          "cbserver": self.cbserver,
+                         "hostnames": self.hostnames,
+                         "filepaths": self.filepaths,
                          "report": self}
 
         j2_env = Environment( loader=FileSystemLoader(THIS_DIR),
@@ -289,6 +291,24 @@ class IncidentReport(object):
                 regmodslist.append(regmod)
         return regmodslist
 
+    def getFacetsByMd5(self, md5):
+        data = self.cb.process_search("md5:"+md5, rows=1, start=0).get('facets',{})
+
+        self.filepaths = []
+        for elem in data.get('path_full',[]):
+            facet = {}
+            facet['filepath'] = elem['name']
+            facet['percentage'] = elem['ratio']
+            self.filepaths.append(facet)
+
+        self.hostnames = []
+        for elem in data.get('hostname',[]):
+            facet = {}
+            facet['hostname'] = elem['name']
+            facet['percentage'] = elem['ratio']
+            self.hostnames.append(facet)
+
+
     def generate_report(self, starting_guid):
         global bar
         self.time_generated = datetime.now()
@@ -386,6 +406,8 @@ class IncidentReport(object):
             self._write_iconfile(self.process['process_md5'])
 
         self.netconns = self.getNetConns(self.process.get('parent_unique_id'))
+
+        self.getFacetsByMd5(self.process['process_md5'])
 
         self._output_from_template(starting_guid)
         bar.next()
