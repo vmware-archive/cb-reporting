@@ -43,6 +43,10 @@
         $("#regmodtable").collapse('toggle');
       });
 
+      $("#binarydetailstoggle").on('click', function(e) {
+        $("#binarydetailstable").collapse('toggle');
+      });
+
       $('.fa').css('cursor', 'pointer');
       $('.label').css('cursor', 'pointer');
 
@@ -67,7 +71,7 @@
       <nav class="navbar navbar-default navbar-inverse" style="margin-top: 20px">
           <div class="container-fluid">
               <div class="navbar-header">
-                  <a class="navbar-brand" href="#"><img src="banner_logo.png"></a>
+                  <a class="navbar-brand" href="#"><img src="images/banner_logo.png"></a>
               </div>
               <div class="collapse navbar-collapse navbar-right">
                   <p class="navbar-text" id="status_string">Incident Summary Report</p>
@@ -84,112 +88,115 @@
         Carbon Black Process Analysis of GUID:
         <a href="{{cbserver}}/#analyze/{{process.id}}/1"><b>{{process.id}}</b></a>
 
-        <table class="table table-condensed">
-          <caption>Binary Details
-          </caption>
-          <thead>
-            <tr>
-              <th class ="col-xs-2">Key</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td>Binary MD5 Hash</td>
-            <td><b>{{binary.md5}}</b></td>
-          </tr>
-          <tr>
-            <td>Executable Image</td>
-            <td>{{binary.is_executable_image}}</td>
-          </tr>
-            <td>File Size</td>
-            <td>{{binary.orig_mod_len}}B</td>
-          <tr>
-            <td>Signed</td>
-            <td>{{binary.digsig_result}}</td>
-          </tr>
-          <tr>
-            <td>Digital Signature Publisher</td>
-            <td>{{binary.digsig_publisher}}</td>
-          </tr>
-          <tr>
-            <td>Digital Signature Company Name</td>
-            <td>{{binary.company_name}}</td>
-          </tr>
-          {% for filename in binary.observed_filename %}
-          <tr>
-            {% if loop.index == 1 %}
-            <td>Observed File Names</td>
-            {% endif %}
-            <td>{{filename}}</td>
-          </tr>
-          {% endfor %}
-
-          </tbody>
-        </table>
-
-        <div class="col-xs-6">
+        <h2>Binary Details <i id="binarydetailstoggle" class="fa fa-level-down"></i></h2>
+        <div class="collapse in" id="binarydetailstable">
           <table class="table table-condensed">
-            <caption>Seen Hostnames
+            <caption>
             </caption>
             <thead>
               <tr>
-                <th>Hostname</th>
-                <th>Percentage</th>
+                <th class ="col-xs-2">Key</th>
+                <th>Value</th>
               </tr>
             </thead>
             <tbody>
-            {% for hostname in hostnames %}
             <tr>
-              <td>{{hostname.hostname}}</td>
-              <td>{{hostname.percentage}}</td>
+              <td>Binary MD5 Hash</td>
+              <td><b>{{binary.md5}}</b></td>
+            </tr>
+            <tr>
+              <td>Executable Image</td>
+              <td>{{binary.is_executable_image}}</td>
+            </tr>
+              <td>File Size</td>
+              <td>{{binary.orig_mod_len}}B</td>
+            <tr>
+              <td>Signed</td>
+              <td>{{binary.digsig_result}}</td>
+            </tr>
+            <tr>
+              <td>Digital Signature Publisher</td>
+              <td>{{binary.digsig_publisher}}</td>
+            </tr>
+            <tr>
+              <td>Digital Signature Company Name</td>
+              <td>{{binary.company_name}}</td>
+            </tr>
+            {% for filename in binary.observed_filename %}
+            <tr>
+              {% if loop.index == 1 %}
+              <td>Observed File Names</td>
+              {% endif %}
+              <td>{{filename}}</td>
             </tr>
             {% endfor %}
+
             </tbody>
           </table>
-        </div>
-        <div class="col-xs-6">
+
+          <div class="col-xs-6">
+            <table class="table table-condensed">
+              <caption>Seen Hostnames
+              </caption>
+              <thead>
+                <tr>
+                  <th>Hostname</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for hostname in hostnames %}
+              <tr>
+                <td>{{hostname.hostname}}</td>
+                <td>{{hostname.percentage}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="col-xs-6">
+            <table class="table table-condensed">
+              <caption>Seen File Paths
+              </caption>
+              <thead>
+                <tr>
+                  <th>File Path</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for filepath in filepaths %}
+              <tr>
+                <td>{{filepath.filepath}}</td>
+                <td>{{filepath.percentage}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
           <table class="table table-condensed">
-            <caption>Seen File Paths
+            <caption>Feed Hits
             </caption>
             <thead>
               <tr>
-                <th>File Path</th>
-                <th>Percentage</th>
+                <th class ="col-xs-2">Feed Name</th>
+                <th>Feed Summary</th>
+                <th>Number of Hits</th>
               </tr>
             </thead>
             <tbody>
-            {% for filepath in filepaths %}
+            {% for feedhit in feed_hits %}
             <tr>
-              <td>{{filepath.filepath}}</td>
-              <td>{{filepath.percentage}}</td>
+              <td>{{feedhit.display_name}}</td>
+              <td>{{feedhit.summary}}</td>
+              <td>{{feedhit.number_of_hits}}</td>
             </tr>
             {% endfor %}
+
             </tbody>
           </table>
         </div>
-
-        <table class="table table-condensed">
-          <caption>Feed Hits
-          </caption>
-          <thead>
-            <tr>
-              <th class ="col-xs-2">Feed Name</th>
-              <th>Feed Summary</th>
-              <th>Number of Hits</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% for feedhit in feed_hits %}
-          <tr>
-            <td>{{feedhit.display_name}}</td>
-            <td>{{feedhit.summary}}</td>
-            <td>{{feedhit.number_of_hits}}</td>
-          </tr>
-          {% endfor %}
-
-          </tbody>
-        </table>
 
         <hr />
 
@@ -302,6 +309,10 @@
                     <td>{{writer.path}}</td>
                 </tr>
                 <tr>
+                    <td>Username</td>
+                    <td>{{writer.username}}</td>
+                </tr>
+                <tr>
                     <td>Command Line</td>
                     <td>{{writer.cmdline}}</td>
                 </tr>
@@ -331,7 +342,7 @@
           <h3>
 
             {% if not executor.get('process_md5') %}
-            <img width="32" src="default.png">
+            <img width="32" src="images/default.png">
             {% else %}
             <img width="32" src="{{executor.get('process_md5')}}.png">
             {% endif %}
@@ -353,6 +364,10 @@
                 <tr>
                     <td class ="col-xs-2">Process Path</td>
                     <td>{{executor.path}}</td>
+                </tr>
+                <tr>
+                    <td>Username</td>
+                    <td>{{executor.username}}</td>
                 </tr>
                 <tr>
                     <td>Command Line</td>
@@ -394,6 +409,10 @@
                 <tr>
                     <td class ="col-xs-2">Process Path</td>
                     <td>{{childproc.path}}</td>
+                </tr>
+                <tr>
+                    <td>Username</td>
+                    <td>{{childproc.username}}</td>
                 </tr>
                 <tr>
                     <td>Command Line</td>

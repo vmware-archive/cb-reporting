@@ -294,20 +294,50 @@ class IncidentReport(object):
     def getFacetsByMd5(self, md5):
         data = self.cb.process_search("md5:"+md5, rows=1, start=0).get('facets',{})
 
+        count = 0
         self.filepaths = []
         for elem in data.get('path_full',[]):
             facet = {}
             facet['filepath'] = elem['name']
             facet['percentage'] = elem['ratio']
             self.filepaths.append(facet)
+            #
+            # We don't want too many facets
+            #
+            if count > 10:
+                break
 
+
+        count = 0
         self.hostnames = []
         for elem in data.get('hostname',[]):
             facet = {}
             facet['hostname'] = elem['name']
             facet['percentage'] = elem['ratio']
             self.hostnames.append(facet)
+            if count > 10:
+                break
 
+    def copyStaticFiles(self):
+        #
+        # TODO: make this cleaner
+        #
+        try:
+            shutil.copytree("css", self.outdir + "/css")
+        except:
+            pass
+        try:
+            shutil.copytree("fonts", self.outdir + "/fonts")
+        except:
+            pass
+        try:
+            shutil.copytree("js", self.outdir + "/js")
+        except:
+            pass
+        try:
+            shutil.copytree("images", self.outdir + "/images")
+        except:
+            pass
 
     def generate_report(self, starting_guid):
         global bar
@@ -319,14 +349,7 @@ class IncidentReport(object):
         except:
             pass
 
-        try:
-            shutil.copyfile("default.png", self.outdir + "/default.png")
-            shutil.copytree("css", self.outdir + "/css")
-            shutil.copytree("fonts", self.outdir + "/fonts")
-            shutil.copytree("js", self.outdir + "/js")
-            shutil.copyfile("banner_logo.png", self.outdir + "/banner_logo.png")
-        except:
-            pass
+        self.copyStaticFiles()
         bar.next()
 
         self.process = self.cb.process_summary(starting_guid, 1).get('process', {})
@@ -341,15 +364,21 @@ class IncidentReport(object):
 
         if 'alliance_hits' in self.process_events:
             for key, value in self.process_events['alliance_hits'].iteritems():
+                pprint.pprint(value)
                 tempdict = {}
                 tempdict['display_name'] = value['feedinfo']['display_name']
                 tempdict['summary'] = value['feedinfo']['summary']
                 tempdict['number_of_hits'] = len(value['hits'])
                 self.feed_hits.append(tempdict)
-
+        #
+        # Get Binary information
+        #
         self.binary = self.cb.binary_summary(self.process.get('process_md5'))
         bar.next()
 
+        #
+        # Sensor Information
+        #
         self.sensor = self.cb.sensor(self.process.get('sensor_id'))
         bar.next()
 
@@ -416,7 +445,7 @@ class IncidentReport(object):
         bar.finish()
         return
 
-    def walk_executors_down(self, process_guid, executors, depth = 5):
+    def walk_executors_down(self, process_guid, executors, depth = 10):
         if depth == 0:
             return
         try:
@@ -437,7 +466,7 @@ class IncidentReport(object):
             self.walk_executors_down(child['unique_id'], executors, depth - 1)
 
 
-    def walk_executors_up(self, parent_guid, executors, depth = 5):
+    def walk_executors_up(self, parent_guid, executors, depth = 10):
         if depth == 0:
             return
         try:
@@ -460,7 +489,7 @@ class IncidentReport(object):
         if parent_guid:
             self.walk_executors_up(parent_guid, executors, depth - 1)
 
-    def walk_writers_by_path(self, hostname, process_path, writers, depth = 5):
+    def walk_writers_by_path(self, hostname, process_path, writers, depth = 10):
         if depth == 0:
             return
 
