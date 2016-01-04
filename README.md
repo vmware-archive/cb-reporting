@@ -4,7 +4,7 @@
 
 * run the script with specified parameters
 
-        python incident_report.py -c <cbserverurl> -a <api-token -g <process-guid>
+        python incident_report.py -c <cbserverurl> -a <api-token> -g <process-guid>
 
 A report will be generated in `./<process-guid>/index.html` for the specified process GUID
 
