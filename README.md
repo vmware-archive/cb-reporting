@@ -1,6 +1,6 @@
 * install all needed requirements:
 
-        sudo pip install requirements.txt
+        sudo pip install -r requirements.txt
 
 * run the script with specified parameters
 
