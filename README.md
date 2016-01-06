@@ -2,6 +2,10 @@
 
         $ ./incident-report  -c <cbserverurl> -a <api-token> -g <process-guid>
 
+* Example
+
+        $ ./incident-report  -c https://server.wedgie.org -a apitokengoeshere -g 00000001-0000-0900-01d1-37525da84f72
+
 ### From Source
 * Install all needed requirements:
 
