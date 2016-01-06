@@ -50,6 +50,18 @@ cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
 #
 bar = Bar('Generating', max=10)
 
+#
+# For pyinstaller
+#
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 class IncidentReport(object):
     def __init__(self, url, token):
         self.sensor = None
@@ -92,7 +104,7 @@ class IncidentReport(object):
         return process_count, host_count
 
     def _output_from_template(self, starting_guid):
-        THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+        THIS_DIR = resource_path(".")
         TEMPLATE_FILE = "incident_report.html"
 
         process_md5 = self.process.get('process_md5')
@@ -323,19 +335,19 @@ class IncidentReport(object):
         # TODO: make this cleaner
         #
         try:
-            shutil.copytree("css", self.outdir + "/css")
+            shutil.copytree(resource_path("css"), self.outdir + "/css")
         except:
             pass
         try:
-            shutil.copytree("fonts", self.outdir + "/fonts")
+            shutil.copytree(resource_path("fonts"), self.outdir + "/fonts")
         except:
             pass
         try:
-            shutil.copytree("js", self.outdir + "/js")
+            shutil.copytree(resource_path("js"), self.outdir + "/js")
         except:
             pass
         try:
-            shutil.copytree("images", self.outdir + "/images")
+            shutil.copytree(resource_path("images"), self.outdir + "/images")
         except:
             pass
 
@@ -364,7 +376,6 @@ class IncidentReport(object):
 
         if 'alliance_hits' in self.process_events:
             for key, value in self.process_events['alliance_hits'].iteritems():
-                pprint.pprint(value)
                 tempdict = {}
                 tempdict['display_name'] = value['feedinfo']['display_name']
                 tempdict['summary'] = value['feedinfo']['summary']
