@@ -1,3 +1,8 @@
+### From Release Binary (Recommended)
+
+        $ ./incident-report  -c <cbserverurl> -a <api-token> -g <process-guid>
+
+### From Source
 * Install all needed requirements:
 
         $ sudo pip install -r requirements.txt
