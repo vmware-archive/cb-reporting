@@ -11,6 +11,10 @@
         $ ./incident-report  -c https://server.wedgie.org -a apitokengoeshere -g 00000001-0000-0900-01d1-37525da84f72
 
 ### From Source'
+* clone cb-reporting.git
+
+        $ git clone https://github.com/carbonblack/cb-reporting.git
+
 * Install all needed requirements:
 
         $ sudo pip install -r requirements.txt
