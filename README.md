@@ -1,5 +1,7 @@
 ### From Release Binary (Recommended)
 
+* Download binary from https://github.com/carbonblack/cb-reporting/releases
+
 * How to run
 
         $ ./incident-report  -c <cbserverurl> -a <api-token> -g <process-guid>
