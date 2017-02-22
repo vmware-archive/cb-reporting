@@ -1,5 +1,4 @@
--e git://github.com/carbonblack/cbapi.git#egg=cbapi&subdirectory=client_apis/python
--e git://github.com/carbonblack/cbfeeds.git#egg=cbfeeds
--e git://github.com/carbonblack/cb-integration.git#egg=cbint
+cbapi==0.8.0
 redis>=2.10.0
 jinja2>=2.6
+pyinstaller==3.1.1

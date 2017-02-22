@@ -478,27 +478,34 @@ class IncidentReport(object):
 
 
     def walk_executors_up(self, parent_guid, executors, depth = 10):
-        if depth == 0:
-            return
         try:
-            parent_guid = str(parent_guid)[0:len(parent_guid)-9]
+            if depth == 0:
+                return
+            try:
+                parent_guid = str(parent_guid)[0:len(parent_guid)-9]
+            except:
+                pass
+
+            if parent_guid.endswith("0000-0000-0000-000000000000"):
+                # if the parent_guid was zero
+                return
+            parent_process = self.cb.process_summary(parent_guid, 1).get('process', {})
+            if 'process_name' not in parent_process:
+                parent_process['process_name'] = "Unknown"
+
+            executors.insert(0, parent_process)
+            if 'process_md5' in parent_process:
+                self._write_iconfile(parent_process['process_md5'])
+
+            path = parent_process.get('path')
+            if not path or "explorer.exe" in path or "services.exe" in path:
+                return
+
+            parent_guid = parent_process.get('parent_unique_id')
+            if parent_guid:
+                self.walk_executors_up(parent_guid, executors, depth - 1)
         except:
-            pass
-        parent_process = self.cb.process_summary(parent_guid, 1).get('process', {})
-        if 'process_name' not in parent_process:
-            parent_process['process_name'] = "Unknown"
-
-        executors.insert(0, parent_process)
-        if 'process_md5' in parent_process:
-            self._write_iconfile(parent_process['process_md5'])
-
-        path = parent_process.get('path')
-        if not path or "explorer.exe" in path or "services.exe" in path:
             return
-
-        parent_guid = parent_process.get('parent_unique_id')
-        if parent_guid:
-            self.walk_executors_up(parent_guid, executors, depth - 1)
 
     def walk_writers_by_path(self, hostname, process_path, writers, depth = 10):
         if depth == 0:
