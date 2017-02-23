@@ -43,6 +43,8 @@ from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from progress.bar import Bar
 
+import dateutil.parser
+
 toolbar_width = 40
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
 #
@@ -149,7 +151,8 @@ class IncidentReport(object):
 
         parts = regmod.split('|')
         new_regmod = {}
-        timestamp = datetime.strptime(parts[1], cb_datetime_format)
+
+        timestamp = dateutil.parser.parse(parts[1]).replace(tzinfo=None)
         new_regmod['timestamp'] = timestamp
         new_regmod['type'] = _lookup_type(int(parts[0]))
         new_regmod['path'] = parts[2]
