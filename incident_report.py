@@ -269,19 +269,21 @@ class IncidentReport(object):
 
     def getChildProcs(self, starting_guid):
         childproclist = []
-
-        childProcs = self.cb.process_events(self.process.get('id'), 1).get('process').get('childproc_complete')
-        if childProcs:
-            for childProc in childProcs:
-                childProc = self._parse_childproc(childProc)
-                if childProc['terminated']:
-                    #
-                    # We don't want to double count child procs
-                    #
-                    continue
-                child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
-                if child_process:
-                    childproclist.append(child_process)
+        try:
+            childProcs = self.cb.process_events(self.process.get('id'), 1).get('process').get('childproc_complete')
+            if childProcs:
+                for childProc in childProcs:
+                    childProc = self._parse_childproc(childProc)
+                    if childProc['terminated']:
+                        #
+                        # We don't want to double count child procs
+                        #
+                        continue
+                    child_process = self.cb.process_summary(childProc['procguid'], 1).get('process', {})
+                    if child_process:
+                        childproclist.append(child_process)
+        except:
+            pass
         return childproclist
 
     def getNetConns(self, process_guid):
