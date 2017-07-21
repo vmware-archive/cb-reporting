@@ -1,5 +1,2 @@
-cbapi==1.2
-redis>=2.10.0
+cbapi>=1.2
 jinja2>=2.6
-pyinstaller==3.1.1
-python-dateutil==2.4.2
