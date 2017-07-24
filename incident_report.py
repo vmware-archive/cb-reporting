@@ -108,7 +108,7 @@ class IncidentReportGenerator(object):
         self.cb =  cbapi
    
     #generate a report from a target GUID
-    def generate_report(self, report_guid,verbose=False):
+    def generate_report(self, report_guid, verbose=False):
         outdir="reports/"+report_guid
         process = self.cb.select(Process, report_guid)
         
@@ -138,8 +138,8 @@ class IncidentReportGenerator(object):
 
         #find processes that have written to the target process's binary
         writers = []
-        writers.extend(self.cb.select(Process).where("filewrite_md5:{} hostname:{}"
-                                                                .format(process.binary.md5, process.hostname)))
+        writers.extend(self.cb.select(Process).where("filemod:{} hostname:{}"
+                                                                .format(process.path, process.hostname)))
         #and write icon files for the writers
         for writer in writers:
             write_iconfile(outdir,writer.binary)
@@ -150,7 +150,7 @@ class IncidentReportGenerator(object):
         hostnames = [{'hostname': e['name'], 'percentage': e['ratio']} for e in facets.get('hostname')]
 
         # process alliance thread intelligence feed hits + write icons for feeds
-        feed_hits = []#self.feed_hits_gen(report_guid,process)
+        feed_hits = []
         # ToDO : provide link to relevant threat report
         for fn in process.tags:
                 alliance_score_n = "alliance_score_{}".format(fn)
@@ -161,29 +161,12 @@ class IncidentReportGenerator(object):
                                   "url": feed.provider_url,
                                   "score": getattr(process, alliance_score_n),
                                   "data": getattr(process, alliance_data_n)})
-            
-            
-        #Todo: move to bindings
-        def parents():
-            """ Generator that returns Process objects representing the parents of this process"""
-            parent_process = process.parent
-            try:
-                while (parent_process and parent_process.id):
-                    yield parent_process
-                    parent_process = parent_process.parent
-                    parent_process.refresh()
-            except:
-                return
-            return
         
-        process.parents = parents()
-        
-        #walk execution tree /parents and write iconfiles
+        #walk execution tree/parents and write icons
         for parent in process.parents:
             write_iconfile(outdir,parent.binary)
             
-        process.parents = parents()
-      
+        #use jinga templating engine to generate a report as html
         output_from_template(self.cb.url, outdir, process, writers, feed_hits, hostnames, filepaths)
         
         print ("[+] Report generated in ./{}\n".format(outdir + "/"))
