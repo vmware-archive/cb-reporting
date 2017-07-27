@@ -43,6 +43,14 @@
         $("#regmodtable").collapse('toggle');
       });
 
+      $("#modloadtabletoggle").on('click', function(e) {
+        $("#modloadtable").collapse('toggle');
+      });
+
+      $("#crossproctoggle").on('click', function(e) {
+        $("#crossproctable").collapse('toggle');
+      });
+
       $("#binarydetailstoggle").on('click', function(e) {
         $("#binarydetailstable").collapse('toggle');
       });
@@ -79,11 +87,11 @@
           </div>
       </nav>
       <div class="container-fluid">
-        <h2><img src="{{process_md5}}.png" />
-        <b>{{process.process_name}}</b> on <b>{{process.hostname}}</b></h2>
+          <h2><img src="{{process.process_md5}}.png" />
+              <b>{{process.process_name}}</b> on <a href="{{cbserver}}/#host/{{process.sensor.id}}/"><b>{{process.hostname}}</b></a></h2>
         Executed at <b>{{process.start}}</b> by <b>{{process.username}}</b><br>
-        Process seen <b>{{process_count.total_results}}</b> times and
-        seen on <b>{{host_count.hostCount}}</b> hosts<br>
+        Process seen <b>{{process.binary.frequency.process_count|default ('zero')}}</b> times and
+        seen on <b>{{process.binary.frequency.computer_count | default('zero')}} </b> hosts<br>
         Report Generated at <b>{{time_generated}}</b> from CB Server Url: <b>{{cbserver}}</b><br>
         Carbon Black Process Analysis of GUID:
         <a href="{{cbserver}}/#analyze/{{process.id}}/1"><b>{{process.id}}</b></a>
@@ -179,18 +187,21 @@
             <caption>Feed Hits
             </caption>
             <thead>
-              <tr>
+            <tr>
                 <th class ="col-xs-2">Feed Name</th>
-                <th>Feed Summary</th>
-                <th>Number of Hits</th>
+                <th>Feed URL</th>
+                <th>Feed Score</th>
+                <th>Feed Data</th>
               </tr>
             </thead>
             <tbody>
+
             {% for feedhit in feed_hits %}
             <tr>
-              <td>{{feedhit.display_name}}</td>
-              <td>{{feedhit.summary}}</td>
-              <td>{{feedhit.number_of_hits}}</td>
+              <td><img src="{{feedhit.feed}}.png" />{{feedhit.feed}}</td>
+                <td>{{feedhit.url}}</td>
+              <td>{{feedhit.score}}</td>
+              <td>{{feedhit.data}}</td>
             </tr>
             {% endfor %}
 
@@ -212,20 +223,24 @@
                 </caption>
                 <thead>
                   <tr>
-                    <th class ="col-xs-2">IP Address</th>
-                    <th>Timestamp</th>
-                    <th>Port</th>
-                    <th>DNS</th>
+                    <th class ="col-xs-2">Remote IP Address</th>
+                    <th>Remote Port</th>
+                    <th>Local IP Adress</th>
+                    <th>Local Port</th>
+                    <th>Protocol</th>
+                    <th>Domain</th>
                     <th>Direction</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for netconn in netconns %}
                 <tr>
-                    <td>{{netconn.ipaddr}}</td>
-                    <td>{{netconn.timestamp}}</td>
-                    <td>{{netconn.port}}</td>
-                    <td>{{netconn.dns}}</td>
+                    <td>{{netconn.remote_ip}}</td>
+                    <td>{{netconn.remote_port}}</td>
+                    <td>{{netconn.local_ip}}</td>
+                    <td>{{netconn.local_port}}</td>
+                    <td>{{netconn.proto}}</td>
+                    <td>{{netconn.domain}}</td>
                     <td>{{netconn.direction}}</td>
                 </tr>
                 {% endfor %}
@@ -256,7 +271,67 @@
                 </tbody>
             </table>
           </div>
-
+          <h3 id="modloadtabletoggle"><span class="label label-primary">{{ modloads|length }} Module Loads</span></h3>
+            <div class="collapse" id="modloadtable">
+            <table class="table table-condensed">
+                <caption>Module Loads
+                </caption>
+                <thead>
+                  <tr>
+                    <th class ="col-xs-2">Module Md5</th>
+                    <th>Path</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for modload in modloads %}
+                <tr>
+                    <td>{{modload.md5}}</td>
+                    <td>{{modload.path}}</td>
+                    <td>{{modload.timestamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
+          <h3 id="crossproctoggle"><span class="label label-primary">{{ crossprocs|length }} Cross Process Events</span></h3>
+            <div class="collapse" id="crossproctable">
+            <table class="table table-condensed">
+                <caption>Cross Process Events
+                </caption>
+                <thead>
+                  <tr>
+                    <th class ="col-xs-2">Process</th>
+                      <th>ID</th>
+                      <th>md5</th>
+                    <th>Type</th>
+                      <th>Privilges</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for cp in crossprocs %}
+                <tr>
+                    {% if cp.is_target %}
+                    <td>{{cp.target_path}}</td>
+                    <td>{{cp.target_proc.unique_id}}</td>
+                    <td>{{cp.target_md5}}</td>
+                    <td>{{cp.type}}</td>
+                    <td>{{cp.privilges}}</td>
+                    <td>{{cp.timestamp}}</td>
+                    {%else%}
+                    <td>{{cp.source_path}}</td>
+                    <td>{{cp.source_proc.unique_id}}</td>
+                    <td>{{cp.source_md5}}</td>
+                    <td>{{cp.type}}</td>
+                    <td>{{cp.privilges}}</td>
+                    <td>{{cp.timestamp}}</td>
+                    {%endif%}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
         <h3 id="filemodtabletoggle"><span class="label label-primary">{{ filemods|length }} File Modifications</span></h3>
         <div class="collapse" id="filemodtable">
             <table class="table table-condensed">
@@ -291,8 +366,8 @@
         {% for writer in writers %}
         <div id="writer{{loop.index}}">
             <h3>
-              <img width="32" src="{{writer.get('process_md5')}}.png" />
-                {% if loop.index == writers|length %}
+              <img width="32" src="{{writer.process_md5}}.png" />
+                {% if loop.index == writers_count %}
                 <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-danger">
                 {% else %}
                 <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-warning">
@@ -301,7 +376,7 @@
             </h3>
             <div class="collapse in" id="writercontent{{loop.index}}">
             <table class="table table-condensed">
-                <caption>Process seen {{report._get_process_frequency(writer.get('process_md5'))[0].total_results}} times and seen on {{report._get_process_frequency(writer.get('process_md5'))[1].hostCount}} hosts
+                <caption>Process seen {{writer.binary.frequency.process_count}} times and seen on {{writer.binary.frequency.computer_count}} hosts
                 </caption>
                 <tbody>
                 <tr>
@@ -318,33 +393,34 @@
                 </tr>
                 <tr>
                     <td>Process GUID</td>
+                    {%if writer.unique_id is not none%}
                     <td>{{writer.unique_id}}</td>
+                    {%else%}
+                    <td>{{writer.id}}</td>
+                    {%endif%}
                 </tr>
                 <tr>
                     <td>Binary Information</td>
-                    <td>{{report._get_binary_info(writer.get('process_md5'))}}</td>
+                    <td>{{writer.binary.md5}}-{{writer.binary.digsig_result}}-{{writer.binary.product_version}}-{{writer.binary.company_name}}-{{writer.binary.digsig_publisher}}</td>
                 </tr>
                 </tbody>
             </table>
             </div>
         </div>
-        {% if loop.index == writers|length %}
-        {% else %}
-        <i class="fa fa-arrow-down fa-2x"></i>
-        {% endif %}
         {% endfor %}
+        <i class="fa fa-arrow-down fa-2x"></i>
         <br />
         <hr />
         <br />
           <h2>Execution Tree <i id="executiontoggle" class="fa fa-level-down"></i></h2>
-          {% for executor in executors %}
+          {% for executor in parents %}
           <div id="executor{{loop.index}}">
           <h3>
 
             {% if not executor.get('process_md5') %}
             <img width="32" src="images/default.png">
             {% else %}
-            <img width="32" src="{{executor.get('process_md5')}}.png">
+            <img width="32" src="{{executor.process_md5}}.png">
             {% endif %}
 
             {% if process.unique_id == executor.unique_id %}
@@ -352,14 +428,20 @@
             {% else %}
             <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-warning">
             {% endif %}
-            {{executor.process_name}}</span>
+            {% if executor.process_name is not none and executor.process_name %}
+            {{executor.process_name}}
+            {%else%}
+            {{executor.cmdline}}
+            {%endif%}
+            </span>
           </h3>
-
             <div class="collapse in" id="executorcontent{{loop.index}}">
             <table class="table table-condensed">
-            <caption>Process Seen {{report._get_process_frequency(executor.get('process_md5'))[0].total_results}}
-            times and seen on {{report._get_process_frequency(executor.get('process_md5'))[1].hostCount}} hosts
+            {% if executor.binary is not none and executor.binary%}
+            <caption>Process Seen {{executor.binary.frequency.process_count}}
+            times and seen on {{executor.binary.frequency.computer_count}} hosts
             </caption>
+            {%endif%}
             <tbody>
                 <tr>
                     <td class ="col-xs-2">Process Path</td>
@@ -374,57 +456,78 @@
                     <td>{{executor.cmdline}}</td>
                 </tr>
                 <tr>
+                    {%if executor.unique_id is not none and executor.unique_id%}
                     <td>Process GUID</td>
                     <td>{{executor.unique_id}}</td>
+                    {%else%}
+                    <td>Process ID</td>
+                    <td>{{executor.id}}</td>
+                    {%endif%}
                 </tr>
                 <tr>
                     <td>Binary Information</td>
-                    <td>{{report._get_binary_info(executor.get('process_md5'))}}</td>
+                    {%if executor.binary is not none%}
+                    <td>{{executor.binary.md5}}-{{executor.binary.digsig_result}}-{{executor.binary.product_version}}-{{executor.binary.company_name}}-{{executor.binary.digsig_publisher}}</td>
+                     {%else%}
+                    <td>{{executor.binaries}}</td>
+                    {% endif %}
                 </tr>
                 </tbody>
             </table>
             </div>
           </div>
-        {% if loop.index == executors|length %}
-        {% else %}
-        <i class="fa fa-arrow-down fa-2x"></i>
-        {% endif %}
         {% endfor %}
+        <i class="fa fa-arrow-down fa-2x"></i>
         <br />
         <hr />
         <br />
 
-        <h2>All Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
-          {% for childproc in childprocs %}
+        <h2>{{children|length}} Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
+          {% for childproc in children %}
           <div id="childproc{{loop.index}}">
           <h3>
-            <img width="32" src="{{childproc.get('process_md5')}}.png" />
-            <span data-toggle="collapse" data-target="#childproccontent{{loop.index}}" class="label label-default">{{childproc.process_name}}</span>
+            <img width="32" src="{{childproc.process.process_md5}}.png" />
+            <span data-toggle="collapse" data-target="#childproccontent{{loop.index}}" class="label label-default">
+            {% if childproc.process.process_name is not none and childproc.process.process_name%}
+            {{childproc.process.process_name}}
+            {%else%}
+            {{childproc.process.cmdline}}
+            {%endif%}
+            </span>
           </h3>
           <div class="collapse in" id="childproccontent{{loop.index}}">
             <table class="table table-condensed">
-                <caption>Process seen {{report._get_process_frequency(childproc.get('process_md5'))[0].total_results}} times and seen on {{report._get_process_frequency(childproc.get('process_md5'))[1].hostCount}} hosts
+                {% if childproc.process.binary is not none and childproc.process.binary%}
+                <caption>Process seen {{childproc.process.binary.frequency.process_count}} times and seen on {{childproc.process.binary.frequency.computer_count}} hosts
                 </caption>
+                {%else%}
+                    Process seen 0 times on 0 hosts
+                {%endif%}
                 <tbody>
                 <tr>
                     <td class ="col-xs-2">Process Path</td>
-                    <td>{{childproc.path}}</td>
+                    <td>{{childproc.process.path}}</td>
                 </tr>
                 <tr>
                     <td>Username</td>
-                    <td>{{childproc.username}}</td>
+                    <td>{{childproc.process.username}}</td>
                 </tr>
                 <tr>
                     <td>Command Line</td>
-                    <td>{{childproc.cmdline}}</td>
+                    <td>{{childproc.process.cmdline}}</td>
                 </tr>
                 <tr>
+                    {%if childproc.process.unique_id is not none and childproc.process.unique_id %}
                     <td>Process GUID</td>
-                    <td>{{childproc.unique_id}}</td>
+                    <td>{{childproc.process.unique_id}}</td>
+                    {%else%}
+                    <td>Process ID</td>
+                    <td>{{childproc.process.id}}</td>
+                    {%endif%}
                 </tr>
                 <tr>
                     <td>Binary Information</td>
-                    <td>{{report._get_binary_info(childproc.get('process_md5'))}}</td>
+                    <td>{{childproc.process.binary.md5}}-{{childproc.process.binary.digsig_result}}-{{childproc.process.binary.product_version}}-{{childproc.process.binary.company_name}}-{{childproc.process.binary.digsig_publisher}}</td>
                 </tr>
                 </tbody>
             </table>
