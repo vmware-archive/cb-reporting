@@ -36,6 +36,7 @@ import cbapi.example_helpers as cbhelper
 
 __author__ = 'jmcfarland+zestep'
 
+
 ''' helper method to write the icon for a binary '''
 
 
@@ -71,8 +72,9 @@ def copy_static_files(thedir):
         todir = os.path.join(".", thedir, d)
         try:
             shutil.copytree(fromdir, todir)
-        except shutil.Error as e:
-            print(e)
+        except OSError:
+            pass
+        except shutil.Error:
             pass
 
 
@@ -81,6 +83,7 @@ def copy_static_files(thedir):
 
 def output_from_template(cbserver, outdir, process, writers=None,
                          feed_hits=None, hostnames=None, filepaths=None):
+
     template_vars = {"process": process,
                      "sensor": process.sensor,
                      "writers": writers if writers else [],
@@ -123,8 +126,7 @@ class IncidentReportGenerator(object):
         if process.binary is not None:
             try:
                 os.makedirs(outdir)
-            except OSError as os_error:
-                print(os_error)
+            except OSError:
                 pass
         else:
             return
