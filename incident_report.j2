@@ -2,11 +2,11 @@
 <html>
   <head>
     <title>Incident Report for {{ process.process_name }} on {{process.hostname}}</title>
-    <script src="../js/jquery-1.11.3.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
-    <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+    <script src="./js/jquery-1.11.3.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/font-awesome.css">
   </head>
 
   <script>
@@ -79,7 +79,7 @@
       <nav class="navbar navbar-default navbar-inverse" style="margin-top: 20px">
           <div class="container-fluid">
               <div class="navbar-header">
-                  <a class="navbar-brand" href="#"><img src="images/banner_logo.png"></a>
+                  <a class="navbar-brand" href="#"><img src="./images/banner_logo.png"></a>
               </div>
               <div class="collapse navbar-collapse navbar-right">
                   <p class="navbar-text" id="status_string">Incident Summary Report</p>
@@ -192,7 +192,7 @@
                 <th>Feed URL</th>
                 <th>Feed Score</th>
                 <th>Feed Data</th>
-              </tr>
+            </tr>
             </thead>
             <tbody>
 
@@ -204,7 +204,6 @@
               <td>{{feedhit.data}}</td>
             </tr>
             {% endfor %}
-
             </tbody>
           </table>
         </div>
@@ -366,13 +365,13 @@
         {% for writer in writers %}
         <div id="writer{{loop.index}}">
             <h3>
-              <img width="32" src="{{writer.process_md5}}.png" />
+              <img width="32" src="{{writer.get('process_md5',None)}}.png" />
                 {% if loop.index == writers_count %}
                 <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-danger">
                 {% else %}
                 <span data-toggle="collapse" data-target="#writercontent{{loop.index}}" class="label label-warning">
                 {% endif %}
-                {{writer.process_name}}</span>
+                {{writer.get('process_name',None)}}</span>
             </h3>
             <div class="collapse in" id="writercontent{{loop.index}}">
             <table class="table table-condensed">
@@ -416,13 +415,7 @@
           {% for executor in parents %}
           <div id="executor{{loop.index}}">
           <h3>
-
-            {% if not executor.get('process_md5') %}
-            <img width="32" src="images/default.png">
-            {% else %}
-            <img width="32" src="{{executor.process_md5}}.png">
-            {% endif %}
-
+            <img width="32" src="{{executor.process_md5|default('images/default')}}.png">
             {% if process.unique_id == executor.unique_id %}
             <span data-toggle="collapse" data-target="#executorcontent{{loop.index}}" class="label label-danger">
             {% else %}
@@ -481,12 +474,11 @@
         <br />
         <hr />
         <br />
-
         <h2>{{children|length}} Child Processes <i id="childproctoggle" class="fa fa-level-down"></i></h2>
           {% for childproc in children %}
           <div id="childproc{{loop.index}}">
           <h3>
-            <img width="32" src="{{childproc.process.process_md5}}.png" />
+            <img width="32" src="{{childproc.process.process_md5|default("images/default")}}.png" />
             <span data-toggle="collapse" data-target="#childproccontent{{loop.index}}" class="label label-default">
             {% if childproc.process.process_name is not none and childproc.process.process_name%}
             {{childproc.process.process_name}}
