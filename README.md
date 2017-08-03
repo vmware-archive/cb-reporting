@@ -6,11 +6,10 @@
 
         $ ./incident-report  --guid <process-guid>
 
-### From Source'
+### From Source
 * clone cb-reporting.git
 
         $ git clone https://github.com/carbonblack/cb-reporting.git
-        $ git checkout zach-dev
 
 * Install all needed requirements:
 
@@ -18,7 +17,7 @@
 
 * Run the script with specified parameters
 
-        $ python incident_report.py -g <process-guid>
+        $ python incident_report.py --guid <process-guid>
 
 A report will be generated in `./reports/<process-guid>/index.html` for the specified process GUID
 
