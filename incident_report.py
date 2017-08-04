@@ -85,12 +85,12 @@ def copy_static_files(output_directory):
 
 
 def output_report_from_template(cbserver, output_directory, process, writers=None,
-                                feed_hits=None, hostnames=None, filepaths=None, parents=None):
+                                feed_hits=None, hostnames=None, filepaths=None):
     template_vars = {"process": process,
                      "sensor": process.sensor,
                      "writers": writers if writers else [],
                      "children": [child for child in process.children],
-                     "parents": [parent for parent in parents ] if parents else [],
+                     "parents": [p for p in process.parents],
                      "modloads": [modload for modload in process.modloads],
                      "netconns": [nc for nc in process.netconns],
                      "regmods": [rm for rm in process.regmods],
