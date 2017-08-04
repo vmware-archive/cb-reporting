@@ -54,6 +54,7 @@ def write_iconfile(output_directory, process=None):
         pass
 
 
+
 '''helper method to write a file'''
 
 
@@ -174,13 +175,11 @@ class IncidentReportGenerator(object):
                               "data": getattr(process, alliance_data_n)})
 
         # walk execution tree/parents and write icons
-        parents = []
-        process.walk_parents(lambda parent, depth: parents.append(parent))
-        for parent in parents:
+        for parent in process.parents:
             write_iconfile(output_directory, parent)
 
         # use jinga templating engine to generate a report as html
-        output_report_from_template(self.cb.url, output_directory, process, writers, feed_hits, hostnames, filepaths, parents)
+        output_report_from_template(self.cb.url, output_directory, process, writers, feed_hits, hostnames, filepaths)
 
         print("[+] Report generated in ./{}\n".format(output_directory + "/"))
 
