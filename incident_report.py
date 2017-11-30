@@ -62,7 +62,7 @@ def write_file(path, name, ext, contents=None):
     if not path or not name or not ext or not contents:
         return
     dest = os.path.join(path, name + ext)
-    f = file(dest, 'wb')
+    f = open(dest, 'wb')
     f.write(contents)
     f.close()
 
@@ -105,7 +105,7 @@ def output_report_from_template(cbserver, output_directory, process, writers=Non
     j2_env = Environment(loader=FileSystemLoader("."),
                          trim_blocks=True)
 
-    report_htmlfile = file(os.path.join(output_directory, "index.html"), 'wb')
+    report_htmlfile = open(os.path.join(output_directory, "index.html"), 'wb')
     report_htmlfile.write(j2_env.get_template("incident_report.j2").render(template_vars).encode("UTF-8"))
 
 
